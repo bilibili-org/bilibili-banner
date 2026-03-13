@@ -66,4 +66,4 @@ pnpm grab "打工松鼠 - 猫头鹰"
 
 - 原项目：[palxiao/bilibili-banner](https://github.com/palxiao/bilibili-banner)
 
-- 2020-10-01 - 2021-04-12 素材来源：[Cloudtq/bilibili-banner](https://github.com/Cloudtq/bilibili-banner/tree/main)
+- 部分素材来源：[Cloudtq/bilibili-banner](https://github.com/Cloudtq/bilibili-banner/tree/main), [web.archive.org](https://web.archive.org/)

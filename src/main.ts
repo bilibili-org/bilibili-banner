@@ -26,7 +26,11 @@ loader
     const bannerTimeLine = new BannerTimeLine({
       containerId: "selectBox",
       onVariantSelect: (variant) => {
-        engine.updateData(variant.data);
+        if (variant.failed) {
+          engine.showLoadFailed(variant.path);
+        } else {
+          engine.updateData(variant.data);
+        }
         localStorage.setItem(PERSIST_KEY, variant.path);
       },
     });

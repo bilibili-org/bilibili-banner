@@ -29,6 +29,8 @@ export interface LoadedVariant {
   name: string;
   path: string;
   data: StandardBannerData;
+  /** 加载失败标记，true 时 data 为空占位，不应触发渲染 */
+  failed?: boolean;
 }
 
 export interface LoadedBannerData {
@@ -47,52 +49,70 @@ export default class BannerDataLoader {
   public static readonly MANIFEST: ManifestEntry[] = [
     {
       date: "2020-10-01",
-      variants: [{ name: "仲秋流金 - 层林尽染", path: "2020-10-01-autumn" }],
+      variants: [{ name: "仲秋流金", path: "2020-10-01-autumn" }],
     },
     {
-      date: "2021-01-01",
-      variants: [{ name: "冬日公园 - 雪仗酣战", path: "2021-01-01-winter" }],
+      date: "2021-02-17",
+      variants: [{ name: "冬日公园" }],
     },
     {
       date: "2021-04-12",
-      variants: [{ name: "十里桃花 - 河畔春游", path: "2021-04-12-spring" }],
+      variants: [{ name: "河畔春游", path: "2021-04-12-spring" }],
     },
     {
-      date: "2021-08-01",
+      date: "2021-05-26",
       variants: [
-        { name: "雷雨楼间 - 不眠之夜", path: "2021-08-01-thunderstorm-night" },
-        { name: "凉风夏夜 - 花火照颜", path: "2021-08-01-sparkler-night" },
-        { name: "晴空流光 - 极目望远", path: "2021-08-01-starlit-night" },
+        { name: "倚窗闲话", path: "2021-05-26-1-summer-noon-chat" },
+        { name: "凭栏听风", path: "2021-05-26-2-balcony-windmill" },
+        { name: "楼台观雨", path: "2021-05-26-3" },
+        { name: "雨天偷闲", path: "2021-05-26-4" },
+        { name: "雨霁黄昏前", path: "2021-05-26-5" },
+        { name: "闲逐晚霞", path: "2021-05-26-6" },
       ],
     },
     {
-      date: "2021-08-02",
+      date: "2021-05-28",
       variants: [
-        { name: "盛夏晴午 - 倚窗闲话", path: "2021-08-02-summer-noon-chat" },
-        { name: "阴晴之际 - 凭栏听风", path: "2021-08-02-balcony-windmill" },
+        { name: "花火照颜", path: "2021-05-28-1-sparkler-night" },
+        {
+          name: "惊雷欢趣",
+          path: "2021-05-28-2-thunderstorm-night",
+        },
+        { name: "极目远眺", path: "2021-05-28-3-starlit-night" },
       ],
     },
-    { date: "2021-08-09", variants: [{ name: "林间矮屋 - 秋日盛馔" }] },
+    {
+      date: "2021-08-09",
+      variants: [
+        { name: "金秋飨宴", path: "2021-08-09-morning" },
+        { name: "暮色微醺", path: "2021-08-09-evening" },
+        { name: "萤火清梦", path: "2021-08-09-night" },
+      ],
+    },
     {
       date: "2021-12-03",
       variants: [
         {
-          name: "极地探险 - 企鹅之约",
-          path: "2021-12-03-antarctica-expedition",
+          name: "极地筑梦",
+          path: "2021-12-03-1-morning",
         },
         {
-          name: "冰海寒夜 - 围炉取暖",
-          path: "2021-12-03-antarctica-fire-night",
+          name: "极地垂钓",
+          path: "2021-12-03-2-antarctica-expedition",
+        },
+        {
+          name: "冰海寒夜",
+          path: "2021-12-03-3-antarctica-fire-night",
         },
       ],
     },
     { date: "2022-03-14", variants: [{ name: "百草惊春 - 苜蓿之眠" }] },
-    { date: "2023-08-13", variants: [{ name: "碧海潜游 - 珊瑚鱼影" }] },
-    { date: "2023-08-21", variants: [{ name: "沉船浮岛 - 垂钓问路" }] },
-    { date: "2023-10-01", variants: [{ name: "叶舟游江 - 萤火中秋" }] },
-    { date: "2023-10-26", variants: [{ name: "林间秋藏 - 猫头鹰监工" }] },
-    { date: "2023-11-17", variants: [{ name: "田野牧风 - 枫叶纸鸢" }] },
-    { date: "2023-12-12", variants: [{ name: "冬湖嬉冰 - 胡萝卜鼻雪人" }] },
+    { date: "2023-08-13", variants: [{ name: "碧海潜游" }] },
+    { date: "2023-08-21", variants: [{ name: "沉船浮岛" }] },
+    { date: "2023-10-01", variants: [{ name: "叶舟游江" }] },
+    { date: "2023-10-26", variants: [{ name: "林间秋藏" }] },
+    { date: "2023-11-17", variants: [{ name: "田野牧风" }] },
+    { date: "2023-12-12", variants: [{ name: "冬湖嬉冰" }] },
     { date: "2024-02-01", variants: [{ name: "雪夜围炉 - 共包新岁" }] },
     { date: "2024-06-06", variants: [{ name: "春野骑行 - 橘猫电话亭" }] },
     { date: "2024-06-26", variants: [{ name: "海洋机场 - 启程远洋" }] },
@@ -113,8 +133,12 @@ export default class BannerDataLoader {
     const tasks = BannerDataLoader.MANIFEST.map(async (entry) => {
       const variantTasks = entry.variants.map((v) => {
         const fetchPath = v.path || entry.date;
-        return fetch(`${import.meta.env.BASE_URL}assets/${fetchPath}/data.json`)
-          .then((res) => res.json())
+        const url = `${import.meta.env.BASE_URL}assets/${fetchPath}/data.json`;
+        return fetch(url)
+          .then((res) => {
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return res.json();
+          })
           .then(
             (rawData) =>
               ({
@@ -125,7 +149,24 @@ export default class BannerDataLoader {
           );
       });
 
-      const resolvedVariants: LoadedVariant[] = await Promise.all(variantTasks);
+      const results = await Promise.allSettled(variantTasks);
+      const resolvedVariants: LoadedVariant[] = results.map((result, idx) => {
+        if (result.status === "fulfilled") {
+          return result.value;
+        }
+        const fetchPath = entry.variants[idx].path || entry.date;
+        const url = `${import.meta.env.BASE_URL}assets/${fetchPath}/data.json`;
+        console.error(
+          `[BannerDataLoader] 配置文件加载失败：${url}`,
+          result.reason,
+        );
+        return {
+          name: entry.variants[idx].name,
+          path: fetchPath,
+          data: { type: "parallax", payload: [] },
+          failed: true,
+        } as LoadedVariant;
+      });
 
       return {
         date: entry.date,

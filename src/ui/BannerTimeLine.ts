@@ -122,7 +122,8 @@ export default class BannerTimeLine {
     activeVariantIndex: number = 0,
   ): HTMLDivElement {
     const itemEl = document.createElement("div");
-    itemEl.className = `timeline-item ${isActive ? "active" : ""}`;
+    const activeVariantFailed = item.variants[activeVariantIndex]?.failed;
+    itemEl.className = `timeline-item ${isActive ? "active" : ""} ${activeVariantFailed ? "load-failed" : ""}`;
 
     const content = document.createElement("div");
     content.className = "item-content";
@@ -165,15 +166,18 @@ export default class BannerTimeLine {
 
       item.variants.forEach((variant: LoadedVariant, index: number) => {
         const btn = document.createElement("div");
-        btn.className = `variant-item ${index === activeVariantIndex && isActive ? "active" : ""}`;
+        btn.className = `variant-item ${index === activeVariantIndex && isActive ? "active" : ""} ${variant.failed ? "load-failed" : ""}`;
         btn.innerText = variant.name;
 
         btn.addEventListener("click", (e: MouseEvent) => {
           e.stopPropagation();
 
+          // 失败的变体不触发渲染
+          if (variant.failed) return;
+
           if (this.container) {
             this.container.querySelectorAll(".timeline-item").forEach((el) => {
-              el.classList.remove("active");
+              el.classList.remove("active", "load-failed");
             });
           }
           itemEl.classList.add("active");
@@ -220,6 +224,10 @@ export default class BannerTimeLine {
     const itemData = this._itemDataMap.get(itemEl);
     if (!itemData) return;
 
+    const firstVariant = itemData.variants[0];
+    // 失败的单变体条目不触发渲染
+    if (firstVariant.failed) return;
+
     if (this.container) {
       this.container.querySelectorAll(".timeline-item").forEach((el) => {
         el.classList.remove("active");
@@ -228,10 +236,10 @@ export default class BannerTimeLine {
     itemEl.classList.add("active");
 
     const nameText = itemEl.querySelector("span > span") as HTMLElement;
-    if (nameText) nameText.innerText = itemData.variants[0].name;
+    if (nameText) nameText.innerText = firstVariant.name;
 
     if (this.onVariantSelect) {
-      this.onVariantSelect(itemData.variants[0]);
+      this.onVariantSelect(firstVariant);
     }
   }
 
