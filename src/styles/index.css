@@ -48,7 +48,6 @@ video {
   display: flex;
   align-items: center;
   justify-content: center;
-  will-change: transform, opacity; /* GPU Layer Promotion */
   backface-visibility: hidden; /* Force Hardware Acceleration */
 }
 
