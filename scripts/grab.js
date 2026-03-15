@@ -312,13 +312,36 @@ function dumpData(data, dataDir) {
   console.log(`已写入 ${outputPath}`);
 }
 
-function updateManifest(bannerName, date, dataLoaderFilePath) {
-  let code = fs.readFileSync(dataLoaderFilePath, "utf8");
-  const newEntry = `    { date: "${date}", variants: [{ name: "${bannerName}" }] },`;
-  // 在 NEW_DATA_PLACEHOLDER 注释前插入新条目
-  code = code.replace(/(\s*\/\/\s*NEW_DATA_PLACEHOLDER)/, `\n${newEntry}$1`);
-  fs.writeFileSync(dataLoaderFilePath, code);
-  console.log(`已更新 BannerDataLoader.ts`);
+function updateBannerConfig(bannerName, date) {
+  const configFilePath = path.resolve(__dirname, "../src/data/banners.json");
+  let banners = [];
+  try {
+    if (fs.existsSync(configFilePath)) {
+      banners = JSON.parse(fs.readFileSync(configFilePath, "utf8"));
+    }
+
+    const existingIndex = banners.findIndex((b) => b.date === date);
+    if (existingIndex !== -1) {
+      const variantExists = banners[existingIndex].variants.some(
+        (v) => v.name === bannerName,
+      );
+      if (!variantExists) {
+        banners[existingIndex].variants.push({ name: bannerName });
+      }
+    } else {
+      banners.push({
+        date,
+        variants: [{ name: bannerName }],
+      });
+    }
+
+    banners.sort((a, b) => a.date.localeCompare(b.date));
+
+    fs.writeFileSync(configFilePath, JSON.stringify(banners, null, 2), "utf8");
+    console.log(`已更新 ${configFilePath}`);
+  } catch (error) {
+    console.error(`更新配置文件失败: ${error.message}`);
+  }
 }
 
 // ─────────────────────── Orchestrator ───────────────────────
@@ -326,10 +349,6 @@ function updateManifest(bannerName, date, dataLoaderFilePath) {
 async function runGrabber(bannerName) {
   const date = generateDate();
   const dataDir = path.resolve(__dirname, `../public/assets/${date}`);
-  const dataLoaderFilePath = path.resolve(
-    __dirname,
-    "../src/core/BannerDataLoader.ts",
-  );
 
   let browser;
   try {
@@ -363,7 +382,7 @@ async function runGrabber(bannerName) {
     await scrapeMoveParams(page, layerData);
 
     dumpData(layerData, dataDir);
-    updateManifest(bannerName, date, dataLoaderFilePath);
+    updateBannerConfig(bannerName, date);
 
     await downloadAssets(remoteUrls, page, dataDir);
     console.log("抓取完成！运行 pnpm dev 查看效果");
