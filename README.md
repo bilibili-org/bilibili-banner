@@ -27,23 +27,26 @@
 
 ### 获取最新效果
 
-1. 运行 `pnpm grab "Banner名称"`，抓取B站首页 Banner 数据，自动在 `public/assets` 目录下生成数据（以当天日期命名）
+1. 运行 `pnpm grab`，抓取 B 站官网当天的 Banner 数据，会自动在 `public/assets` 目录下生成数据（以当天日期命名并自动记录）
 2. 运行 `pnpm dev` 查看效果
 
-例如，在 10 月 25 号这天发现 B 站更新了 Banner，可以运行：
+### 抓取往期数据 (Web Archive)
+
+如果错过了某天的 Banner，你可以通过 Web Archive 抓取往期数据，通过参数 `-d` 指定日期，`-u` 指定 Web Archive 中 bilibili 历史快照的完整 URL
 
 ```bash
-pnpm grab "打工松鼠 - 猫头鹰"
+pnpm grab_archive -d 2021-02-11 -u https://web.archive.org/web/20210211151433/https://www.bilibili.com/
 ```
 
-然后运行 `pnpm dev`，访问 `http://localhost:5173` 即可看到最新的效果。
+- `-d`: 指定日期 (YYYY-MM-DD)
+- `-u`: 指定 Web Archive 中 bilibili 历史快照的完整 URL
 
 ### 手动调整参数
 
 > [!IMPORTANT]
-> 目前自动抓取脚本能自动计算生成各图层的水平移动(a)、旋转幅度(deg)、垂直移动(g)，透明度(opacity)和模糊度(blur)参数，仅大小变化(f)参数需要手动调整
+> 目前自动化脚本能计算生成各图层的水平移动(a)、旋转幅度(deg)、垂直移动(g)，透明度(opacity)和模糊度(blur)参数，仅大小变化(f)参数需要手动调整
 
-打开 `public/assets` 目录下对应的 `data.json` 文件，修改其中每个对象的参数，刷新网页查看效果
+打开 `public/assets` 目录下对应的 `data.json` 文件，修改其中需要调整对象的参数，然后运行 `pnpm dev` 查看效果
 
 目前支持参数如下：
 

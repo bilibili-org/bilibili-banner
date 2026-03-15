@@ -31,20 +31,21 @@ function generateDate() {
 }
 
 function prepareDataDir(dataDir) {
+  const dirName = path.basename(dataDir);
   if (fs.existsSync(dataDir)) {
     fs.readdirSync(dataDir).forEach((file) => {
       fs.unlinkSync(path.join(dataDir, file));
     });
-    console.log("已清空目录", dataDir);
+    console.log("已清空目录", dirName);
   } else {
     fs.mkdirSync(dataDir, { recursive: true });
-    console.log("已创建目录", dataDir);
+    console.log("已创建目录", dirName);
   }
 }
 
 // ─────────────────────── Puppeteer Functions ───────────────────────
 
-async function launchBrowser() {
+async function initBrowser() {
   const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
   if (!executablePath) {
     throw new Error(
@@ -64,6 +65,42 @@ async function launchBrowser() {
     height: DEFAULT_SCREEN_HEIGHT,
   });
   return { browser, page };
+}
+
+// ─────────────────────── Banner Setup Functions ───────────────────────
+
+async function setupOfficialBanner(page, targetUrl) {
+  console.log(`正在加载官网页面: ${targetUrl}`);
+  await page.goto(targetUrl, { waitUntil: "domcontentloaded" });
+  await sleep(2000);
+  await page.goto(targetUrl, { waitUntil: "domcontentloaded" });
+
+  console.log("正在检测动态 Banner...");
+  await page.waitForSelector(".animated-banner", { timeout: 10000 });
+}
+
+async function setupArchiveBanner(page, targetUrl) {
+  console.log(`正在加载 Archive 页面: ${targetUrl}`);
+  await page.goto(targetUrl, { waitUntil: "networkidle2", timeout: 60000 });
+
+  console.log("正在准备页面环境 (隐藏 Archive 工具栏)...");
+  await page.evaluate(() => {
+    const wm = document.getElementById("wm-ipp-base");
+    if (wm) wm.style.display = "none";
+    const wm2 = document.getElementById("wm-ipp-print");
+    if (wm2) wm2.style.display = "none";
+  });
+
+  console.log("正在检测动态 Banner...");
+  try {
+    await page.waitForSelector(".animated-banner", { timeout: 10000 });
+    await sleep(3000);
+  } catch (e) {
+    console.warn("未直接检测到 .animated-banner，尝试滚动页面...");
+    await page.evaluate(() => window.scrollTo(0, 100));
+    await sleep(3000);
+    await page.waitForSelector(".animated-banner", { timeout: 10000 });
+  }
 }
 
 // ─────────────────────── Core Logic Functions ───────────────────────
@@ -118,7 +155,7 @@ function transformLayerSrc(data, dataDir) {
   for (const item of data) {
     if (item.src) {
       urls.push(item.src);
-      const fileName = item.src.split("/").pop();
+      const fileName = item.src.split("/").pop().split("?")[0];
       item.src = `./assets/${dirName}/${fileName}`;
     }
   }
@@ -132,20 +169,29 @@ function transformLayerSrc(data, dataDir) {
  * @param {string} dataDir
  */
 async function downloadAssets(urls, page, dataDir) {
-  prepareDataDir(dataDir);
-  console.log("正在下载资源素材...");
+  const total = urls.length;
+  console.log(`开始下载资源素材 (共 ${total} 个)...`);
+  let current = 0;
   for (const url of urls) {
-    const fileName = url.split("/").pop();
+    const fileName = url.split("/").pop().split("?")[0];
     const filePath = path.join(dataDir, fileName);
 
-    const content = await page.evaluate(async (assetUrl) => {
-      const res = await fetch(assetUrl);
-      const buffer = await res.arrayBuffer();
-      return { buffer: Array.from(new Uint8Array(buffer)) };
-    }, url);
+    try {
+      const content = await page.evaluate(async (assetUrl) => {
+        const res = await fetch(assetUrl);
+        const buffer = await res.arrayBuffer();
+        return { buffer: Array.from(new Uint8Array(buffer)) };
+      }, url);
 
-    fs.writeFileSync(filePath, Buffer.from(content.buffer));
+      fs.writeFileSync(filePath, Buffer.from(content.buffer));
+      current++;
+      process.stdout.write(`\r下载进度: (${current}/${total}) `);
+    } catch (e) {
+      process.stdout.write("\n");
+      console.warn(`下载素材失败: ${url}`, e.message);
+    }
   }
+  process.stdout.write("\n");
 }
 
 /**
@@ -306,14 +352,16 @@ async function scrapeMoveParams(page, layerData) {
   calcFinalData(layerData, leftStates, rightStates);
 }
 
-function dumpData(data, dataDir) {
+function dumpLayerData(data, dataDir) {
   const outputPath = path.join(dataDir, "data.json");
   fs.writeFileSync(outputPath, JSON.stringify(data, null, 2));
-  console.log(`已写入 ${outputPath}`);
+  console.log(`已写入 data.json 配置文件`);
 }
 
-function updateBannerConfig(bannerName, date) {
+function updateBannerManifest(date) {
   const configFilePath = path.resolve(__dirname, "../src/data/banners.json");
+  const bannerName = date;
+
   let banners = [];
   try {
     if (fs.existsSync(configFilePath)) {
@@ -338,7 +386,7 @@ function updateBannerConfig(bannerName, date) {
     banners.sort((a, b) => a.date.localeCompare(b.date));
 
     fs.writeFileSync(configFilePath, JSON.stringify(banners, null, 2), "utf8");
-    console.log(`已更新 ${configFilePath}`);
+    console.log("已更新 banners.json 配置文件");
   } catch (error) {
     console.error(`更新配置文件失败: ${error.message}`);
   }
@@ -346,30 +394,26 @@ function updateBannerConfig(bannerName, date) {
 
 // ─────────────────────── Orchestrator ───────────────────────
 
-async function runGrabber(bannerName) {
-  const date = generateDate();
+async function runGrabber(date, targetUrl) {
   const dataDir = path.resolve(__dirname, `../public/assets/${date}`);
+  const isArchive = targetUrl.includes("web.archive.org");
 
   let browser;
   try {
-    const launchResult = await launchBrowser();
-    browser = launchResult.browser;
-    const page = launchResult.page;
+    const browserResult = await initBrowser();
+    browser = browserResult.browser;
+    const page = browserResult.page;
 
-    console.log("正在加载页面...");
-    await page.goto("https://www.bilibili.com/", {
-      waitUntil: "networkidle2",
-    });
-
-    console.log("正在检测动态 Banner...");
-    await page.waitForSelector(".animated-banner");
-    // 等待 Banner 元素完全渲染
-    await sleep(2000);
+    if (!isArchive) {
+      await setupOfficialBanner(page, targetUrl);
+    } else {
+      await setupArchiveBanner(page, targetUrl);
+    }
 
     let layerData = await parseLayers(page);
     if (layerData.length === 0) {
       console.error("未获取到图层数据，尝试增加等待时间");
-      await sleep(3000);
+      await sleep(6000);
       layerData = await parseLayers(page);
     }
     if (layerData.length === 0) {
@@ -378,12 +422,12 @@ async function runGrabber(bannerName) {
     }
 
     const remoteUrls = transformLayerSrc(layerData, dataDir);
-
     await scrapeMoveParams(page, layerData);
 
-    dumpData(layerData, dataDir);
-    updateBannerConfig(bannerName, date);
+    updateBannerManifest(date);
 
+    prepareDataDir(dataDir);
+    dumpLayerData(layerData, dataDir);
     await downloadAssets(remoteUrls, page, dataDir);
     console.log("抓取完成！运行 pnpm dev 查看效果");
     return true;
@@ -399,12 +443,33 @@ async function runGrabber(bannerName) {
 
 // ─────────────────────── Entry Point ───────────────────────
 
-const bannerName = process.argv[2];
-if (!bannerName) {
-  console.error(
-    'Banner 未命名，请正确运行命令\n示例: node scripts/grab.js "大海之上 - 鳄鱼"',
-  );
-  process.exit(1);
+const args = process.argv.slice(2);
+let isArchive = false;
+let date = "";
+let targetUrl = "https://www.bilibili.com/";
+
+for (let i = 0; i < args.length; i++) {
+  if (args[i] === "--archive") {
+    isArchive = true;
+  } else if (args[i] === "-d" && args[i + 1]) {
+    date = args[i + 1];
+    i++;
+  } else if (args[i] === "-u" && args[i + 1]) {
+    targetUrl = args[i + 1];
+    i++;
+  }
 }
 
-runGrabber(bannerName);
+if (isArchive) {
+  if (!date || !targetUrl) {
+    console.error(
+      "Archive 模式参数错误。必须包含 -d 和 -u 参数\n" +
+        "用法: node scripts/grab.js -archive -d <date> -u <url>\n",
+    );
+    process.exit(1);
+  }
+} else {
+  date = generateDate();
+}
+
+runGrabber(date, targetUrl);
