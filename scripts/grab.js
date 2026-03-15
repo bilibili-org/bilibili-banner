@@ -7,9 +7,9 @@ import { dirname } from "node:path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const DEFAYLT_SCREEN_WIDTH = 1650;
-const DEFAYLT_SCREEN_HEIGHT = 800;
-const DEFAYLT_MOUSE_MOVE_DISTANCE = 1000;
+const DEFAULT_SCREEN_WIDTH = 1650;
+const DEFAULT_SCREEN_HEIGHT = 800;
+const DEFAULT_MOUSE_MOVE_DISTANCE = 1000;
 
 // ─────────────────────── Utility Functions ───────────────────────
 
@@ -60,8 +60,8 @@ async function launchBrowser() {
   });
   const page = await browser.newPage();
   await page.setViewport({
-    width: DEFAYLT_SCREEN_WIDTH,
-    height: DEFAYLT_SCREEN_HEIGHT,
+    width: DEFAULT_SCREEN_WIDTH,
+    height: DEFAULT_SCREEN_HEIGHT,
   });
   return { browser, page };
 }
@@ -201,15 +201,15 @@ function calcFinalData(layerData, leftStates, rightStates) {
 
 function calcAcceleration(item, left, right) {
   const origX = item.transform[4];
-  const aLeft = (left.translateX - origX) / -DEFAYLT_MOUSE_MOVE_DISTANCE;
-  const aRight = (right.translateX - origX) / DEFAYLT_MOUSE_MOVE_DISTANCE;
+  const aLeft = (left.translateX - origX) / -DEFAULT_MOUSE_MOVE_DISTANCE;
+  const aRight = (right.translateX - origX) / DEFAULT_MOUSE_MOVE_DISTANCE;
   item.a = Number(((aLeft + aRight) / 2).toFixed(8));
 }
 
 function calcGravity(item, left, right) {
   const origY = item.transform[5];
-  const gLeft = (left.translateY - origY) / -DEFAYLT_MOUSE_MOVE_DISTANCE;
-  const gRight = (right.translateY - origY) / DEFAYLT_MOUSE_MOVE_DISTANCE;
+  const gLeft = (left.translateY - origY) / -DEFAULT_MOUSE_MOVE_DISTANCE;
+  const gRight = (right.translateY - origY) / DEFAULT_MOUSE_MOVE_DISTANCE;
   const g = (gLeft + gRight) / 2;
   if (Math.abs(g) > 1e-7) {
     item.g = Number(g.toFixed(8));
@@ -221,8 +221,8 @@ function calcDeg(item, left, right) {
   const leftRad = Math.atan2(left.matrixB, left.matrixA);
   const rightRad = Math.atan2(right.matrixB, right.matrixA);
 
-  const dDegLeft = (leftRad - baseRad) / -DEFAYLT_MOUSE_MOVE_DISTANCE;
-  const dDegRight = (rightRad - baseRad) / DEFAYLT_MOUSE_MOVE_DISTANCE;
+  const dDegLeft = (leftRad - baseRad) / -DEFAULT_MOUSE_MOVE_DISTANCE;
+  const dDegRight = (rightRad - baseRad) / DEFAULT_MOUSE_MOVE_DISTANCE;
   const deg = (dDegLeft + dDegRight) / 2;
 
   if (Math.abs(deg) > 1e-8) {
@@ -244,7 +244,7 @@ function calcOpacity(item, left, right) {
 
 function calcBlur(item, left, right) {
   const ratio = Math.min(
-    DEFAYLT_MOUSE_MOVE_DISTANCE / (DEFAYLT_SCREEN_WIDTH / 2),
+    DEFAULT_MOUSE_MOVE_DISTANCE / (DEFAULT_SCREEN_WIDTH / 2),
     1,
   );
 
@@ -284,7 +284,7 @@ async function scrapeMoveParams(page, layerData) {
   // 1. 计算右移 (从左边缘开始)
   console.log("正在计算右移参数...");
   await page.mouse.move(leftX, centerY);
-  await page.mouse.move(leftX + DEFAYLT_MOUSE_MOVE_DISTANCE, centerY, {
+  await page.mouse.move(leftX + DEFAULT_MOUSE_MOVE_DISTANCE, centerY, {
     steps: 10,
   });
   await sleep(1500);
@@ -297,7 +297,7 @@ async function scrapeMoveParams(page, layerData) {
   // 2. 计算左移 (从右边缘开始)
   console.log("正在计算左移参数...");
   await page.mouse.move(rightX, centerY);
-  await page.mouse.move(rightX - DEFAYLT_MOUSE_MOVE_DISTANCE, centerY, {
+  await page.mouse.move(rightX - DEFAULT_MOUSE_MOVE_DISTANCE, centerY, {
     steps: 10,
   });
   await sleep(1500);
