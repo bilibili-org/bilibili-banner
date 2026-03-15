@@ -132,6 +132,7 @@ function transformLayerSrc(data, dataDir) {
  * @param {string} dataDir
  */
 async function downloadAssets(urls, page, dataDir) {
+  prepareDataDir(dataDir);
   console.log("正在下载资源素材...");
   for (const url of urls) {
     const fileName = url.split("/").pop();
@@ -169,6 +170,8 @@ async function captureLayerStates(page) {
       return {
         translateX: matrix.e,
         translateY: matrix.f,
+        matrixA: matrix.a,
+        matrixB: matrix.b,
         opacity: parseFloat(style.opacity),
         blur: blur,
       };
@@ -191,6 +194,8 @@ function calcFinalData(layerData, leftStates, rightStates) {
     calcAcceleration(item, left, right);
     calcOpacity(item, left, right);
     calcBlur(item, left, right);
+    calcGravity(item, left, right);
+    calcDeg(item, left, right);
   }
 }
 
@@ -199,6 +204,30 @@ function calcAcceleration(item, left, right) {
   const aLeft = (left.translateX - origX) / -DEFAYLT_MOUSE_MOVE_DISTANCE;
   const aRight = (right.translateX - origX) / DEFAYLT_MOUSE_MOVE_DISTANCE;
   item.a = Number(((aLeft + aRight) / 2).toFixed(8));
+}
+
+function calcGravity(item, left, right) {
+  const origY = item.transform[5];
+  const gLeft = (left.translateY - origY) / -DEFAYLT_MOUSE_MOVE_DISTANCE;
+  const gRight = (right.translateY - origY) / DEFAYLT_MOUSE_MOVE_DISTANCE;
+  const g = (gLeft + gRight) / 2;
+  if (Math.abs(g) > 1e-7) {
+    item.g = Number(g.toFixed(8));
+  }
+}
+
+function calcDeg(item, left, right) {
+  const baseRad = Math.atan2(item.transform[1], item.transform[0]);
+  const leftRad = Math.atan2(left.matrixB, left.matrixA);
+  const rightRad = Math.atan2(right.matrixB, right.matrixA);
+
+  const dDegLeft = (leftRad - baseRad) / -DEFAYLT_MOUSE_MOVE_DISTANCE;
+  const dDegRight = (rightRad - baseRad) / DEFAYLT_MOUSE_MOVE_DISTANCE;
+  const deg = (dDegLeft + dDegRight) / 2;
+
+  if (Math.abs(deg) > 1e-8) {
+    item.deg = Number(deg.toFixed(9));
+  }
 }
 
 function calcOpacity(item, left, right) {
@@ -302,8 +331,6 @@ async function runGrabber(bannerName) {
     "../src/core/BannerDataLoader.ts",
   );
 
-  prepareDataDir(dataDir);
-
   let browser;
   try {
     const launchResult = await launchBrowser();
@@ -312,24 +339,32 @@ async function runGrabber(bannerName) {
 
     console.log("正在加载页面...");
     await page.goto("https://www.bilibili.com/", {
-      waitUntil: "domcontentloaded",
-    });
-    await sleep(1000);
-    await page.goto("https://www.bilibili.com/", {
-      waitUntil: "domcontentloaded",
+      waitUntil: "networkidle2",
     });
 
     console.log("正在检测动态 Banner...");
     await page.waitForSelector(".animated-banner");
+    // 等待 Banner 元素完全渲染
     await sleep(2000);
 
-    const layerData = await parseLayers(page);
+    let layerData = await parseLayers(page);
+    if (layerData.length === 0) {
+      console.error("未获取到图层数据，尝试增加等待时间");
+      await sleep(3000);
+      layerData = await parseLayers(page);
+    }
+    if (layerData.length === 0) {
+      console.error("未获取到图层数据，退出");
+      return false;
+    }
+
     const remoteUrls = transformLayerSrc(layerData, dataDir);
 
     await scrapeMoveParams(page, layerData);
 
     dumpData(layerData, dataDir);
     updateManifest(bannerName, date, dataLoaderFilePath);
+
     await downloadAssets(remoteUrls, page, dataDir);
     console.log("抓取完成！运行 pnpm dev 查看效果");
     return true;

@@ -41,19 +41,20 @@ pnpm grab "打工松鼠 - 猫头鹰"
 ### 手动调整参数
 
 > [!IMPORTANT]
-> 目前自动抓取脚本仅能生成各图层的移动加速度，旋转幅度、重力、大小变化需要手动调整
+> 目前自动抓取脚本能自动计算生成各图层的水平移动(a)、旋转幅度(deg)、垂直移动(g)，透明度(opacity)和模糊度(blur)参数，仅大小变化(f)参数需要手动调整
 
 打开 `public/assets` 目录下对应的 `data.json` 文件，修改其中每个对象的参数，刷新网页查看效果
 
 目前支持参数如下：
 
-| 属性    | 类型   | 说明                                             |
-| ------- | ------ | ------------------------------------------------ |
-| a       | number | 表示加速度，数值越高移动变化越大（接受正负值）   |
-| deg     | number | 表示旋转幅度，数值越高旋转越快（接受正负值）     |
-| g       | number | 表示重力，数值越高上下移动变化越大（接受正负值） |
-| f       | number | 表示大小变化，对应 CSS transform: scale          |
-| opacity | array  | 透明度变化，接收一个区间                         |
+| 属性    | 类型   | 说明                                               | 备注           |
+| ------- | ------ | -------------------------------------------------- | -------------- |
+| a       | number | 表示加速度，数值越高移动变化越大（接受正负值）     |                |
+| deg     | number | 表示旋转幅度，数值越高旋转越快（接受正负值）       |                |
+| g       | number | 表示重力，数值越高上下移动变化越大（接受正负值）   |                |
+| f       | number | 表示大小变化，对应 CSS transform: scale            | **需手动调整** |
+| opacity | array  | 透明度变化，三元组数组[default, leftMax, rightMax] |                |
+| blur    | array  | 模糊度变化，三元组数组[default, leftMax, rightMax] |                |
 
 > 注：正负值会影响变化的方向
 
@@ -69,4 +70,4 @@ pnpm grab "打工松鼠 - 猫头鹰"
 
 - 原项目：[palxiao/bilibili-banner](https://github.com/palxiao/bilibili-banner)
 
-- 部分素材来源：[Cloudtq/bilibili-banner](https://github.com/Cloudtq/bilibili-banner/tree/main), [web.archive.org](https://web.archive.org/)
+- 部分素材来源：[Cloudtq/bilibili-banner](https://github.com/Cloudtq/bilibili-banner/tree/main), [web.archive.org](docs/README.md)
