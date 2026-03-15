@@ -15,6 +15,7 @@
     "puppeteer": "^24.37.5",
     "vite": "^7.3.1"
   },
+  "type": "module",
   "keywords": [
     "bilibili",
     "banner"

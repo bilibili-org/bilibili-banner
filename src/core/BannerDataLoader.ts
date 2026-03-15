@@ -122,7 +122,7 @@ export default class BannerDataLoader {
     { date: "2025-06-15", variants: [{ name: "清凉一夏 - 水漫街头" }] },
     { date: "2025-09-10", variants: [{ name: "弯月流星 - 手捧星光" }] },
     { date: "2026-01-09", variants: [{ name: "雪林候车 - 学子归途" }] },
-    // ADD_NEW_DATA
+    // NEW_DATA_PLACEHOLDER
   ];
 
   /**

@@ -10,7 +10,7 @@ export interface BaseLayer {
   height: number;
   transform: number[]; // [a, b, c, d, tx, ty]
   opacity?: number[]; // [default, opLeft, opRight]
-  blur?: number;
+  blur?: number | number[]; // 静态数字 或 [default, blurLeft, blurRight]
   a: number; // 补偿系数
   g?: number; // 视差系数
   f?: number; // 缩放系数
@@ -322,7 +322,10 @@ export default class BannerEngine {
 
       // 启用制造工厂
       const child = this._createLayerElement(item);
-      if (item.blur) child.style.filter = `blur(${item.blur}px)`;
+      if (item.blur !== undefined) {
+        const initialBlur = Array.isArray(item.blur) ? item.blur[0] : item.blur;
+        child.style.filter = `blur(${initialBlur}px)`;
+      }
       child.style.width = `${item.width * this.compensate}px`;
       child.style.height = `${item.height * this.compensate}px`;
 
@@ -407,6 +410,32 @@ export default class BannerEngine {
             : this._lerp(opDef, opRight, ratio);
 
         layer.style.opacity = String(targetOpacity);
+      }
+
+      // 处理动态 blur
+      if (Array.isArray(item.blur)) {
+        if (item.blur.length !== 3) {
+          throw new Error(
+            `[BannerEngine] Invalid blur length: expected 3, got ${item.blur.length}`,
+          );
+        }
+        const blurDef = item.blur[0];
+        const blurLeft = item.blur[1];
+        const blurRight = item.blur[2];
+
+        const ratio = Math.min(
+          Math.abs((currentMoveX / window.innerWidth) * 2),
+          1,
+        );
+        const targetBlur =
+          currentMoveX < 0
+            ? this._lerp(blurDef, blurLeft, ratio)
+            : this._lerp(blurDef, blurRight, ratio);
+
+        const child = layer.firstElementChild as HTMLElement;
+        if (child) {
+          child.style.filter = `blur(${targetBlur}px)`;
+        }
       }
     }
   }

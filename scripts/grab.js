@@ -1,21 +1,17 @@
-/*
- * BannerGrabber - Bilibili Banner 资源抓取工具
- * 用法: node scripts/grab.js <banner名称>
- * 示例: node scripts/grab.js "大海之上 - 鳄鱼"
- *
- * 功能：
- *  1. 启动 Puppeteer 访问 bilibili.com
- *  2. 抓取 .animated-banner 下所有图层的变换数据
- *  3. 模拟鼠标偏移，计算各图层加速度参数 a
- *  4. 下载所有图层资源到 public/assets/<date>/
- *  5. 生成 data.json 并更新 BannerDataLoader.js 的 MANIFEST
- */
+import puppeteer from "puppeteer";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
 
-const puppeteer = require("puppeteer");
-const fs = require("node:fs");
-const path = require("node:path");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-// ─────────────────────── 工具函数 ───────────────────────
+const DEFAYLT_SCREEN_WIDTH = 1650;
+const DEFAYLT_SCREEN_HEIGHT = 800;
+const DEFAYLT_MOUSE_MOVE_DISTANCE = 1000;
+
+// ─────────────────────── Utility Functions ───────────────────────
 
 /**
  * 延迟指定时间
@@ -26,311 +22,335 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// ─────────────────────── 主类 ───────────────────────
+function generateDate() {
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = String(today.getMonth() + 1).padStart(2, "0");
+  const d = String(today.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
 
-/**
- * Banner 资源抓取器
- */
-class BannerGrabber {
-  /**
-   * @param {string} bannerName - Banner 展示名称（写入 MANIFEST 的 name 字段）
-   */
-  constructor(bannerName) {
-    this.bannerName = bannerName;
-    this.data = [];
-
-    const today = new Date();
-    const y = today.getFullYear();
-    const m = String(today.getMonth() + 1).padStart(2, "0");
-    const d = String(today.getDate()).padStart(2, "0");
-    this.date = `${y}-${m}-${d}`;
-
-    this.saveFolder = path.resolve(__dirname, `../public/assets/${this.date}`);
-    this.dataLoaderPath = path.resolve(
-      __dirname,
-      "../src/core/BannerDataLoader.ts",
-    );
-  }
-
-  async run() {
-    this._prepareFolder();
-    if (await this._scrape()) {
-      this._writeDataJson();
-      this._updateManifest();
-      console.log("✅ 完成！运行 pnpm dev 查看效果。");
-    } else {
-      console.log("⚠️ 抓取已取消或终止（未检测到动态 Banner）。");
-    }
-  }
-
-  /**
-   * 准备保存目录：不存在则新建，已存在则清空
-   * @private
-   */
-  _prepareFolder() {
-    if (fs.existsSync(this.saveFolder)) {
-      fs.readdirSync(this.saveFolder).forEach((file) => {
-        fs.unlinkSync(path.join(this.saveFolder, file));
-      });
-      console.log(`🗑  已清空 ${this.saveFolder}`);
-    } else {
-      fs.mkdirSync(this.saveFolder, { recursive: true });
-      console.log(`📁 已创建 ${this.saveFolder}`);
-    }
-  }
-
-  /**
-   * 启动 Puppeteer 并执行完整抓取流程
-   * @private
-   */
-  async _scrape() {
-    const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
-    if (!executablePath) {
-      throw new Error(
-        "❌ 未找到浏览器路径。请在 .env 文件中配置 PUPPETEER_EXECUTABLE_PATH，或在运行命令时通过环境变量指定。\n示例内容: PUPPETEER_EXECUTABLE_PATH=C:\\Programs\\chrome.exe",
-      );
-    }
-
-    const browser = await puppeteer.launch({
-      headless: "new",
-      executablePath,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+function prepareDataDir(dataDir) {
+  if (fs.existsSync(dataDir)) {
+    fs.readdirSync(dataDir).forEach((file) => {
+      fs.unlinkSync(path.join(dataDir, file));
     });
-    const page = await browser.newPage();
-    await page.setViewport({ width: 1650, height: 800 });
-
-    try {
-      console.log("🌐 正在加载页面...");
-      await page.goto("https://www.bilibili.com/", {
-        waitUntil: "domcontentloaded",
-      });
-
-      console.log("🔍 正在检测动态 Banner...");
-      try {
-        // 第一次检测，较短超时
-        await page.waitForSelector(".animated-banner", { timeout: 3000 });
-      } catch (_e) {
-        console.log("🔄 未立即检测到动态 Banner，尝试刷新页面...");
-        await page.goto("https://www.bilibili.com/", {
-          waitUntil: "domcontentloaded",
-        });
-        await sleep(1000);
-        try {
-          // 第二次检测
-          await page.waitForSelector(".animated-banner", { timeout: 3000 });
-        } catch (_e2) {
-          console.log(
-            "ℹ️ 仍未检测到动态 Banner 元素。当前页面可能使用的是静态图片或处于特殊活动期间，抓取终止。",
-          );
-          return false;
-        }
-      }
-      await sleep(2000);
-
-      // 第一遍：获取图层基础数据并下载资源
-      console.log("📥 正在下载资源...");
-      await this._fetchLayers(page);
-
-      // 模拟鼠标偏移
-      const element = await page.$(".animated-banner");
-      const { x, y, width } = await element.boundingBox();
-      const centerX = x + width / 2;
-      const centerY = y + 50;
-
-      // ====== 右移 ======
-      await page.mouse.move(centerX, centerY);
-      await sleep(500);
-      await page.mouse.move(centerX + 1000, centerY, { steps: 5 });
-      await sleep(1500);
-      await this._calculateOffsetParams(page, "right", 1000);
-
-      // 离开恢复
-      await page.mouse.move(centerX, centerY - 200);
-      await sleep(500);
-
-      // ====== 左移 ======
-      await page.mouse.move(centerX, centerY);
-      await sleep(500);
-      await page.mouse.move(centerX - 1000, centerY, { steps: 5 });
-      await sleep(1500);
-      await this._calculateOffsetParams(page, "left", -1000);
-
-      // 综合处理
-      this._finalizeData();
-    } catch (error) {
-      console.error("❌ 抓取出错:", error);
-    } finally {
-      await browser.close();
-    }
-  }
-
-  /**
-   * 获取所有图层的变换数据，并逐一下载资源
-   * @param {import('puppeteer').Page} page
-   * @private
-   */
-  async _fetchLayers(page) {
-    const layerElements = await page.$$(".animated-banner .layer");
-    for (const layerEl of layerElements) {
-      const layerData = await page.evaluate((el) => {
-        const child = el.firstElementChild;
-        const style = window.getComputedStyle(child);
-        const matrix = new DOMMatrix(style.transform);
-
-        return {
-          tagName: child.tagName.toLowerCase(),
-          opacity: [
-            parseFloat(style.opacity),
-            parseFloat(style.opacity),
-            parseFloat(style.opacity),
-          ],
-          transform: [
-            matrix.a,
-            matrix.b,
-            matrix.c,
-            matrix.d,
-            matrix.e,
-            matrix.f,
-          ],
-          width: parseFloat(style.width),
-          height: parseFloat(style.height),
-          src: child.src,
-          blur: parseFloat(
-            (style.filter.match(/blur\((.+?)px\)/) || [0, 0])[1],
-          ),
-          a: 0.01,
-        };
-      }, layerEl);
-
-      await this._downloadFile(layerData, page);
-    }
-  }
-
-  async _calculateOffsetParams(page, direction, moveDist) {
-    const layerElements = await page.$$(".animated-banner .layer");
-    for (let i = 0; i < layerElements.length; i++) {
-      const state = await page.evaluate((el) => {
-        const style = window.getComputedStyle(el.firstElementChild);
-        const matrix = new DOMMatrix(style.transform);
-        let blur = 0;
-        const filterStr = style.filter;
-        if (filterStr && filterStr !== "none") {
-          const match = filterStr.match(/blur\((.+?)px\)/);
-          if (match) blur = parseFloat(match[1]);
-        }
-        return {
-          skewX: matrix.e,
-          opacity: parseFloat(style.opacity),
-          blur: blur,
-        };
-      }, layerElements[i]);
-
-      const item = this.data[i];
-      if (!item.temp) item.temp = {};
-
-      const origX = item.transform[4] || 0;
-      const a = (state.skewX - origX) / moveDist;
-
-      item.temp[direction] = {
-        a: a,
-        opacity: state.opacity,
-        blur: state.blur,
-      };
-    }
-  }
-
-  _finalizeData() {
-    // 假设 1650 屏幕宽度下偏移 1000 的拉扯比例
-    const ratio = Math.min(1000 / (1650 / 2), 1);
-
-    for (const item of this.data) {
-      if (!item.temp) continue;
-
-      const aRight = item.temp.right.a || 0;
-      const aLeft = item.temp.left.a || 0;
-      item.a = Number(((aRight + aLeft) / 2).toFixed(5));
-
-      const defOp = item.opacity[0];
-      const opRight =
-        item.temp.right.opacity !== undefined &&
-        !Number.isNaN(item.temp.right.opacity)
-          ? item.temp.right.opacity
-          : defOp;
-      const opLeft =
-        item.temp.left.opacity !== undefined &&
-        !Number.isNaN(item.temp.left.opacity)
-          ? item.temp.left.opacity
-          : defOp;
-
-      let finalOpRight = defOp + (opRight - defOp) / ratio;
-      let finalOpLeft = defOp + (opLeft - defOp) / ratio;
-
-      finalOpRight = Math.max(0, Math.min(1, finalOpRight));
-      finalOpLeft = Math.max(0, Math.min(1, finalOpLeft));
-
-      item.opacity = [
-        defOp,
-        Number(finalOpLeft.toFixed(2)),
-        Number(finalOpRight.toFixed(2)),
-      ];
-
-      delete item.temp;
-    }
-  }
-
-  /**
-   * 下载单个资源文件，并将处理后的数据追加到 this.data
-   * @param {object} item - 图层数据
-   * @param {import('puppeteer').Page} page
-   * @private
-   */
-  async _downloadFile(item, page) {
-    const fileName = item.src.split("/").pop();
-    const filePath = path.join(this.saveFolder, fileName);
-
-    const content = await page.evaluate(async (url) => {
-      const res = await fetch(url);
-      const buffer = await res.arrayBuffer();
-      return { buffer: Array.from(new Uint8Array(buffer)) };
-    }, item.src);
-
-    fs.writeFileSync(filePath, Buffer.from(content.buffer));
-    // 将路径统一改为相对于 public 的格式
-    const relativeSrc = `/assets/${this.date}/${fileName}`;
-    this.data.push({ ...item, src: relativeSrc });
-  }
-
-  /**
-   * 将抓取到的数据写入 data.json
-   * @private
-   */
-  _writeDataJson() {
-    const outputPath = path.join(this.saveFolder, "data.json");
-    fs.writeFileSync(outputPath, JSON.stringify(this.data, null, 2));
-    console.log(`💾 已写入 ${outputPath}`);
-  }
-
-  _updateManifest() {
-    let code = fs.readFileSync(this.dataLoaderPath, "utf8");
-
-    const newEntry = `    { date: "${this.date}", variants: [{ name: "${this.bannerName}" }] },`;
-
-    // 在 ADD_NEW_DATA 注释前插入新条目
-    code = code.replace(/(\s*\/\/\s*ADD_NEW_DATA)/, `\n${newEntry}$1`);
-
-    fs.writeFileSync(this.dataLoaderPath, code);
-    console.log(`📝 已更新 BannerDataLoader.ts MANIFEST`);
+    console.log("已清空目录", dataDir);
+  } else {
+    fs.mkdirSync(dataDir, { recursive: true });
+    console.log("已创建目录", dataDir);
   }
 }
 
-// ─────────────────────── 入口 ───────────────────────
+// ─────────────────────── Puppeteer Functions ───────────────────────
+
+async function launchBrowser() {
+  const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+  if (!executablePath) {
+    throw new Error(
+      "未找到浏览器路径。请在 .env 文件中配置 PUPPETEER_EXECUTABLE_PATH，或在运行命令时通过环境变量指定\n" +
+        "示例内容: PUPPETEER_EXECUTABLE_PATH=C:\\Programs\\chrome.exe",
+    );
+  }
+
+  const browser = await puppeteer.launch({
+    headless: "new",
+    executablePath,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
+  const page = await browser.newPage();
+  await page.setViewport({
+    width: DEFAYLT_SCREEN_WIDTH,
+    height: DEFAYLT_SCREEN_HEIGHT,
+  });
+  return { browser, page };
+}
+
+// ─────────────────────── Core Logic Functions ───────────────────────
+
+async function parseLayers(page) {
+  console.log("正在解析图层元数据...");
+  const data = [];
+  const layerElements = await page.$$(".animated-banner .layer");
+  for (const layerEl of layerElements) {
+    const layerData = await page.evaluate((el) => {
+      const child = el.firstElementChild;
+      const style = window.getComputedStyle(child);
+      const matrix = new DOMMatrix(style.transform);
+
+      const filterStr = style.filter;
+      let blur = 0;
+      if (filterStr && filterStr !== "none") {
+        const match = filterStr.match(/blur\((.+?)px\)/);
+        if (match) blur = parseFloat(match[1]);
+      }
+
+      return {
+        tagName: child.tagName.toLowerCase(),
+        opacity: [
+          parseFloat(style.opacity),
+          parseFloat(style.opacity),
+          parseFloat(style.opacity),
+        ],
+        transform: [matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f],
+        width: child.width,
+        height: child.height,
+        src: child.src,
+        blur: blur,
+        a: 0.01,
+      };
+    }, layerEl);
+
+    data.push(layerData);
+  }
+  return data;
+}
+
+/**
+ * 转换元数据中的 src 为本地相对路径，并返回原始远端 URL 列表
+ * @param {Array} data
+ * @param {string} dataDir
+ * @returns {string[]} remoteUrls
+ */
+function transformLayerSrc(data, dataDir) {
+  const dirName = path.basename(dataDir);
+  const urls = [];
+  for (const item of data) {
+    if (item.src) {
+      urls.push(item.src);
+      const fileName = item.src.split("/").pop();
+      item.src = `./assets/${dirName}/${fileName}`;
+    }
+  }
+  return urls;
+}
+
+/**
+ * 遍历 URL 列表下载所有素材
+ * @param {string[]} urls
+ * @param {import('puppeteer').Page} page
+ * @param {string} dataDir
+ */
+async function downloadAssets(urls, page, dataDir) {
+  console.log("正在下载资源素材...");
+  for (const url of urls) {
+    const fileName = url.split("/").pop();
+    const filePath = path.join(dataDir, fileName);
+
+    const content = await page.evaluate(async (assetUrl) => {
+      const res = await fetch(assetUrl);
+      const buffer = await res.arrayBuffer();
+      return { buffer: Array.from(new Uint8Array(buffer)) };
+    }, url);
+
+    fs.writeFileSync(filePath, Buffer.from(content.buffer));
+  }
+}
+
+/**
+ * 采集当前所有图层的视觉状态
+ */
+async function captureLayerStates(page) {
+  const layerElements = await page.$$(".animated-banner .layer");
+  const states = [];
+  for (const el of layerElements) {
+    const state = await page.evaluate((el) => {
+      const child = el.firstElementChild;
+      const style = window.getComputedStyle(child);
+      const matrix = new DOMMatrix(style.transform);
+
+      const filterStr = style.filter;
+      let blur = 0;
+      if (filterStr && filterStr !== "none") {
+        const match = filterStr.match(/blur\((.+?)px\)/);
+        if (match) blur = parseFloat(match[1]);
+      }
+
+      return {
+        translateX: matrix.e,
+        translateY: matrix.f,
+        opacity: parseFloat(style.opacity),
+        blur: blur,
+      };
+    }, el);
+    states.push(state);
+  }
+  return states;
+}
+
+function calcFinalData(layerData, leftStates, rightStates) {
+  for (let i = 0; i < layerData.length; i++) {
+    const item = layerData[i];
+    const left = leftStates[i];
+    const right = rightStates[i];
+
+    if (!left || !right) {
+      throw new Error(`图层状态不完整: ${item.src}`);
+    }
+
+    calcAcceleration(item, left, right);
+    calcOpacity(item, left, right);
+    calcBlur(item, left, right);
+  }
+}
+
+function calcAcceleration(item, left, right) {
+  const origX = item.transform[4];
+  const aLeft = (left.translateX - origX) / -DEFAYLT_MOUSE_MOVE_DISTANCE;
+  const aRight = (right.translateX - origX) / DEFAYLT_MOUSE_MOVE_DISTANCE;
+  item.a = Number(((aLeft + aRight) / 2).toFixed(8));
+}
+
+function calcOpacity(item, left, right) {
+  const defOp = item.opacity[0];
+
+  const snap = (captured) => {
+    if (defOp === 0) return captured > 0 ? 1 : 0;
+    if (defOp === 1) return captured < 1 ? 0 : 1;
+    return captured; // 回退逻辑，尽管 B 站通常只有 0 和 1
+  };
+
+  item.opacity = [defOp, snap(left.opacity), snap(right.opacity)];
+}
+
+function calcBlur(item, left, right) {
+  const ratio = Math.min(
+    DEFAYLT_MOUSE_MOVE_DISTANCE / (DEFAYLT_SCREEN_WIDTH / 2),
+    1,
+  );
+
+  const defBlur = item.blur || 0;
+
+  const process = (captured) => {
+    const extrapolated = defBlur + (captured - defBlur) / ratio;
+    const clamped = Math.max(0, extrapolated);
+    return clamped < 1 ? 0 : Math.ceil(clamped);
+  };
+
+  const blurLeft = process(left.blur);
+  const blurRight = process(right.blur);
+
+  if (defBlur === blurLeft && defBlur === blurRight) {
+    if (defBlur !== 0) {
+      item.blur = defBlur;
+    } else {
+      delete item.blur;
+    }
+  } else {
+    item.blur = [defBlur, blurLeft, blurRight];
+  }
+}
+
+async function scrapeMoveParams(page, layerData) {
+  const element = await page.$(".animated-banner");
+  const { x, y } = await element.boundingBox();
+  const viewportWidth = page.viewport().width;
+
+  const leftX = x + 100;
+  const rightX = x + viewportWidth - 100;
+
+  const centerY = y + 80;
+  const resetY = y + 200; // Banner 下方
+
+  // 1. 计算右移 (从左边缘开始)
+  console.log("正在计算右移参数...");
+  await page.mouse.move(leftX, centerY);
+  await page.mouse.move(leftX + DEFAYLT_MOUSE_MOVE_DISTANCE, centerY, {
+    steps: 10,
+  });
+  await sleep(1500);
+  const rightStates = await captureLayerStates(page);
+
+  // 鼠标移动到 Banner 下方等待图层回正
+  await page.mouse.move(viewportWidth / 2, resetY);
+  await sleep(1500);
+
+  // 2. 计算左移 (从右边缘开始)
+  console.log("正在计算左移参数...");
+  await page.mouse.move(rightX, centerY);
+  await page.mouse.move(rightX - DEFAYLT_MOUSE_MOVE_DISTANCE, centerY, {
+    steps: 10,
+  });
+  await sleep(1500);
+  const leftStates = await captureLayerStates(page);
+
+  calcFinalData(layerData, leftStates, rightStates);
+}
+
+function dumpData(data, dataDir) {
+  const outputPath = path.join(dataDir, "data.json");
+  fs.writeFileSync(outputPath, JSON.stringify(data, null, 2));
+  console.log(`已写入 ${outputPath}`);
+}
+
+function updateManifest(bannerName, date, dataLoaderFilePath) {
+  let code = fs.readFileSync(dataLoaderFilePath, "utf8");
+  const newEntry = `    { date: "${date}", variants: [{ name: "${bannerName}" }] },`;
+  // 在 NEW_DATA_PLACEHOLDER 注释前插入新条目
+  code = code.replace(/(\s*\/\/\s*NEW_DATA_PLACEHOLDER)/, `\n${newEntry}$1`);
+  fs.writeFileSync(dataLoaderFilePath, code);
+  console.log(`已更新 BannerDataLoader.ts`);
+}
+
+// ─────────────────────── Orchestrator ───────────────────────
+
+async function runGrabber(bannerName) {
+  const date = generateDate();
+  const dataDir = path.resolve(__dirname, `../public/assets/${date}`);
+  const dataLoaderFilePath = path.resolve(
+    __dirname,
+    "../src/core/BannerDataLoader.ts",
+  );
+
+  prepareDataDir(dataDir);
+
+  let browser;
+  try {
+    const launchResult = await launchBrowser();
+    browser = launchResult.browser;
+    const page = launchResult.page;
+
+    console.log("正在加载页面...");
+    await page.goto("https://www.bilibili.com/", {
+      waitUntil: "domcontentloaded",
+    });
+    await sleep(1000);
+    await page.goto("https://www.bilibili.com/", {
+      waitUntil: "domcontentloaded",
+    });
+
+    console.log("正在检测动态 Banner...");
+    await page.waitForSelector(".animated-banner");
+    await sleep(2000);
+
+    const layerData = await parseLayers(page);
+    const remoteUrls = transformLayerSrc(layerData, dataDir);
+
+    await scrapeMoveParams(page, layerData);
+
+    dumpData(layerData, dataDir);
+    updateManifest(bannerName, date, dataLoaderFilePath);
+    await downloadAssets(remoteUrls, page, dataDir);
+    console.log("抓取完成！运行 pnpm dev 查看效果");
+    return true;
+  } catch (error) {
+    console.error("抓取出错:", error.message);
+    return false;
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
+  }
+}
+
+// ─────────────────────── Entry Point ───────────────────────
 
 const bannerName = process.argv[2];
 if (!bannerName) {
   console.error(
-    '❌ Banner 未命名，请正确运行命令。\n示例: node scripts/grab.js "大海之上 - 鳄鱼"',
+    'Banner 未命名，请正确运行命令\n示例: node scripts/grab.js "大海之上 - 鳄鱼"',
   );
   process.exit(1);
 }
 
-new BannerGrabber(bannerName).run();
+runGrabber(bannerName);
