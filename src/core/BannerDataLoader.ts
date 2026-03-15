@@ -106,7 +106,12 @@ export default class BannerDataLoader {
         },
       ],
     },
-    { date: "2022-03-14", variants: [{ name: "百草惊春 - 苜蓿之眠" }] },
+    { date: "2022-03-14", variants: [{ name: "风叶穿行" }] },
+    { date: "2023-03-01", variants: [{ name: "课间小憩" }] },
+    { date: "2023-03-31", variants: [{ name: "草木营建工记" }] },
+    { date: "2023-05-08", variants: [{ name: "劳作清余" }] },
+    { date: "2023-06-12", variants: [{ name: "微澜篝火欢" }] },
+    { date: "2023-07-18", variants: [{ name: "幽涧萤光会" }] },
     { date: "2023-08-13", variants: [{ name: "碧海潜游" }] },
     { date: "2023-08-21", variants: [{ name: "沉船浮岛" }] },
     { date: "2023-10-01", variants: [{ name: "叶舟游江" }] },
@@ -122,6 +127,7 @@ export default class BannerDataLoader {
     { date: "2025-06-15", variants: [{ name: "清凉一夏 - 水漫街头" }] },
     { date: "2025-09-10", variants: [{ name: "弯月流星 - 手捧星光" }] },
     { date: "2026-01-09", variants: [{ name: "雪林候车 - 学子归途" }] },
+
     // NEW_DATA_PLACEHOLDER
   ];
 
