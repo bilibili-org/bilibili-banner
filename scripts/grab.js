@@ -130,6 +130,7 @@ async function parseLayers(page) {
           parseFloat(style.opacity),
         ],
         transform: [matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f],
+        baseScale: Math.sqrt(matrix.a * matrix.a + matrix.b * matrix.b),
         width: child.width,
         height: child.height,
         src: child.src,
@@ -218,6 +219,7 @@ async function captureLayerStates(page) {
         translateY: matrix.f,
         matrixA: matrix.a,
         matrixB: matrix.b,
+        scaleS: Math.sqrt(matrix.a * matrix.a + matrix.b * matrix.b),
         opacity: parseFloat(style.opacity),
         blur: blur,
       };
@@ -242,6 +244,7 @@ function calcFinalData(layerData, leftStates, rightStates) {
     calcBlur(item, left, right);
     calcGravity(item, left, right);
     calcDeg(item, left, right);
+    calcScale(item, left, right);
   }
 }
 
@@ -274,6 +277,17 @@ function calcDeg(item, left, right) {
   if (Math.abs(deg) > 1e-8) {
     item.deg = Number(deg.toFixed(9));
   }
+}
+
+function calcScale(item, left, right) {
+  const base = item.baseScale ?? 1;
+  const fLeft = (left.scaleS - base) / -DEFAULT_MOUSE_MOVE_DISTANCE;
+  const fRight = (right.scaleS - base) / DEFAULT_MOUSE_MOVE_DISTANCE;
+  const f = (fLeft + fRight) / 2;
+  if (Math.abs(f) > 1e-8) {
+    item.f = Number(f.toFixed(10));
+  }
+  delete item.baseScale;
 }
 
 function calcOpacity(item, left, right) {
