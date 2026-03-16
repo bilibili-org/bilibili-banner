@@ -586,9 +586,6 @@ let targetUrl = "https://www.bilibili.com/";
 for (let i = 0; i < args.length; i++) {
   if (args[i] === "--archive") {
     isArchive = true;
-  } else if (args[i] === "-d" && args[i + 1]) {
-    date = args[i + 1];
-    i++;
   } else if (args[i] === "-u" && args[i + 1]) {
     targetUrl = args[i + 1];
     i++;
@@ -596,10 +593,22 @@ for (let i = 0; i < args.length; i++) {
 }
 
 if (isArchive) {
-  if (!date || !targetUrl) {
+  if (!targetUrl || !targetUrl.includes("web.archive.org")) {
     console.error(
-      "Archive 模式参数错误。必须包含 -d 和 -u 参数\n" +
-        "用法: tsx scripts/grab.ts --archive -d <date> -u <url>\n",
+      "Archive 模式参数错误。必须显式包含 -u 参数指定 Archive URL\n" +
+        "用法: tsx scripts/grab.ts --archive -u <url>\n",
+    );
+    process.exit(1);
+  }
+  // 从 URL 中提取日期: https://web.archive.org/web/20241226082416/https://www.bilibili.com/
+  const match = targetUrl.match(/\/web\/(\d{8})\d+/);
+  if (match) {
+    const d = match[1];
+    date = `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
+    console.log(`从 URL 解析日期: ${date}`);
+  } else {
+    console.error(
+      "无法从 URL 中解析日期，请确保 URL 格式正确 (需包含 YYYYMMDD 时间戳)",
     );
     process.exit(1);
   }

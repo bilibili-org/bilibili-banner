@@ -72,4 +72,4 @@ $$ \sqrt{a^2 + b^2} = \sqrt{(s\cos\theta)^2 + (s\sin\theta)^2} = \sqrt{s^2(\cos^
 ## 4. 注意事项
 
 - 脚本依赖 `DOMMatrix` API，该 API 对 `transform: matrix()` 的解析是最准确的。
-- 自动化无法处理 Canvas 渲染的粒子（如 2021 年前的雪花），此类特殊效果需手动在 `data.json` 中新增 `particle` 类型。
+- 自动化无法处理 Canvas 渲染的粒子（如 2021-02-17 的雪花），此类特殊效果需手动在 `data.json` 中新增 `particle` 类型。
