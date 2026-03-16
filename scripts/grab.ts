@@ -125,7 +125,7 @@ async function setupArchiveBanner(
   } catch (e) {
     console.warn("未直接检测到 .animated-banner，尝试滚动页面...");
     await page.evaluate(() => window.scrollTo(0, 100));
-    await sleep(5000);
+    await sleep(10000);
     await page.waitForSelector(".animated-banner", { timeout: 10000 });
   }
 }
@@ -548,7 +548,7 @@ async function runGrabber(date: string, targetUrl: string): Promise<boolean> {
     let layerData = await parseLayers(page);
     if (layerData.length === 0) {
       console.error("未获取到图层数据，尝试增加等待时间");
-      await sleep(6000);
+      await sleep(30000);
       layerData = await parseLayers(page);
     }
     if (layerData.length === 0) {
