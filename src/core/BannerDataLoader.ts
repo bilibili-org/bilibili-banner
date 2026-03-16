@@ -1,135 +1,93 @@
+import BANNER_MANIFEST_JSON from "../data/banner.json";
 import type {
-  ParallaxLayer,
-  ParticleLayerConfig,
-  StandardBannerData,
-} from "./BannerEngine";
+  Banner,
+  BannerManifest,
+  DailyBanner,
+  Layers,
+  MotionLayer,
+  ParticleLayer,
+  SimpleVideoLayer,
+} from "./types";
 
-/**
- * Banner 数据加载器
- * 通过静态清单（MANIFEST）统一管理所有 Banner 元数据，
- * 并提供 load() 方法并行拉取所有 JSON 数据。
- *
- * 新增一期 Banner 时，只需在 MANIFEST 末尾追加一条记录即可。
- */
+export const BANNER_MANIFEST = BANNER_MANIFEST_JSON as BannerManifest[];
 
-// 变体定义接口
-export interface VariantEntry {
-  name: string;
-  path?: string;
-  data?: unknown; // 解析后的原始JSON数据，将作为未知结构向下传递
+function parseLayerData(rawData: unknown): Layers {
+  if (!Array.isArray(rawData)) {
+    throw new Error("[BannerDataLoader] 数据格式错误: 期望数组类型层配置");
+  }
+
+  // biome-ignore lint/suspicious/noExplicitAny: rawData 来源为 JSON，item 类型由内部 switch 逻辑根据 type 字段动态收窄
+  const layers = rawData.reduce((acc: Layers, item: any) => {
+    const { type } = item;
+
+    switch (type) {
+      case "particle":
+        acc.push(item as ParticleLayer);
+        break;
+      case "simple-video":
+        acc.push(item as SimpleVideoLayer);
+        break;
+      case "video":
+      case "img":
+        acc.push(item as MotionLayer);
+        break;
+      default:
+        throw new Error(`[BannerDataLoader] 未知类型数据: ${type}`);
+    }
+
+    return acc;
+  }, []);
+
+  if (layers.length === 0) {
+    throw new Error(
+      "[BannerDataLoader] 校验失败: 配置文件中没有发现有效的图层数据",
+    );
+  }
+
+  return layers;
 }
 
-// 原始清单数据结构
-export interface ManifestEntry {
-  date: string;
-  variants: VariantEntry[];
-}
-
-export interface LoadedVariant {
-  name: string;
-  path: string;
-  data: StandardBannerData;
-  /** 加载失败标记，true 时 data 为空占位，不应触发渲染 */
-  failed?: boolean;
-}
-
-export interface LoadedBannerData {
-  date: string;
-  variants: LoadedVariant[];
-}
-
-import MANIFEST_JSON from "../data/banners.json";
-
-export default class BannerDataLoader {
-  public static readonly MANIFEST: ManifestEntry[] =
-    MANIFEST_JSON as ManifestEntry[];
-
-  /**
-   * 按新的结构统一并行加载所有变体的数据。
-   * @returns {Promise<LoadedBannerData[]>}
-   */
-  public async load(): Promise<LoadedBannerData[]> {
-    const tasks = BannerDataLoader.MANIFEST.map(async (entry) => {
-      const variantTasks = entry.variants.map((v) => {
-        const fetchPath = v.path || entry.date;
-        const url = `${import.meta.env.BASE_URL}assets/${fetchPath}/data.json`;
-        return fetch(url)
-          .then((res) => {
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            return res.json();
-          })
-          .then(
-            (rawData) =>
-              ({
-                name: v.name,
-                path: fetchPath,
-                data: this._normalizeData(rawData),
-              }) as LoadedVariant,
-          );
-      });
-
-      const results = await Promise.allSettled(variantTasks);
-      const resolvedVariants: LoadedVariant[] = results.map((result, idx) => {
-        if (result.status === "fulfilled") {
-          return result.value;
-        }
-        const fetchPath = entry.variants[idx].path || entry.date;
-        const url = `${import.meta.env.BASE_URL}assets/${fetchPath}/data.json`;
-        console.error(
-          `[BannerDataLoader] 配置文件加载失败：${url}`,
-          result.reason,
-        );
-        return {
-          name: entry.variants[idx].name,
-          path: fetchPath,
-          data: { type: "parallax", payload: [] },
-          failed: true,
-        } as LoadedVariant;
-      });
-
+export async function loadBanners(): Promise<DailyBanner[]> {
+  const tasks = BANNER_MANIFEST.map(async (entry) => {
+    const innerLoadTasks = entry.configs.map(async (v) => {
+      const fetchPath = v.path || entry.date;
+      const url = `${import.meta.env.BASE_URL}assets/${fetchPath}/data.json`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const rawData = await res.json();
       return {
-        date: entry.date,
-        variants: resolvedVariants,
-      } as LoadedBannerData;
+        name: v.name,
+        path: fetchPath,
+        layers: parseLayerData(rawData),
+      } as Banner;
     });
 
-    return Promise.all(tasks);
-  }
+    const results = await Promise.allSettled(innerLoadTasks);
 
-  private _normalizeData(rawData: unknown): StandardBannerData {
-    if (
-      rawData &&
-      typeof rawData === "object" &&
-      !Array.isArray(rawData) &&
-      (rawData as { mode?: string }).mode === "simple-video"
-    ) {
+    const banners: Banner[] = results.map((result, idx) => {
+      if (result.status === "fulfilled") {
+        return result.value;
+      }
+
+      const fetchPath = entry.configs[idx].path || entry.date;
+      const url = `${import.meta.env.BASE_URL}assets/${fetchPath}/data.json`;
+      console.error(
+        `[BannerDataLoader] 配置文件加载失败：${url}`,
+        result.reason,
+      );
       return {
-        type: "simple-video",
-        payload: {
-          mode: "simple-video",
-          src: (rawData as { src: string }).src,
-        },
-      };
-    }
+        name: entry.configs[idx].name,
+        path: fetchPath,
+        layers: [],
+        failed: true,
+      } as Banner;
+    });
 
-    if (Array.isArray(rawData)) {
-      const payload = rawData.map((item) => {
-        // 粒子层配置直接透传
-        if (item.type === "particle") {
-          return item as ParticleLayerConfig;
-        }
-        const isVideo = item.tagName === "video";
-        return {
-          ...item,
-          type: isVideo ? "video" : "image",
-        } as ParallaxLayer;
-      });
-      return {
-        type: "parallax",
-        payload,
-      };
-    }
+    return {
+      date: entry.date,
+      banners: banners,
+    } as DailyBanner;
+  });
 
-    return { type: "parallax", payload: [] };
-  }
+  return Promise.all(tasks);
 }

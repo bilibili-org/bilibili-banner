@@ -1,77 +1,109 @@
-# bilibili-banner 仿B站首页动态头图
+# bilibili-banner 仿 B 站首页动态头图
 
-基于 [palxiao/bilibili-banner](https://github.com/palxiao/bilibili-banner) 重构，使用 TypeScript + Vite 完全重写，高度还原 B 站动态 Banner 及交互效果
+基于 [palxiao/bilibili-banner](https://github.com/palxiao/bilibili-banner) 重构，使用 TypeScript + Vite 完全重写，高度还原 B 站动态 Banner 及交互效果。本项目长期收集并汇总了自 2020 年起 B 站首页的大部分动态 Banner
 
 ---
 
-[在线预览](https://bilibili-org.github.io/bilibili-banner/)
+[🚀 在线预览](https://bilibili-org.github.io/bilibili-banner/)
+
 ![cover](docs/image/cover.png)
 
-> 自动化通常只能完成 90% 的工作，部分参数可能需要手动微调以达到最佳交互效果，具体可参考下方说明和往期数据
->
-> 数据更新可能不及时或错过，如果你恰好发现B站更新头图，欢迎 PR ~
->
-> 最后，希望你喜欢这个项目 ❤️
+## 🛠️ 快速开始
 
-## 准备工作
+### 1. 安装依赖
 
-1. 运行 `pnpm i` 或 `npm i` 安装依赖
-2. **配置浏览器路径**：抓取工具依赖 Puppeteer，如果你的电脑没有安装默认路径的 Chrome，请创建 `.env` 文件并指定浏览器可执行文件路径：
-   ```env
-   PUPPETEER_EXECUTABLE_PATH=X:\path\to\chrome.exe
-   ```
+```bash
+pnpm install
+```
 
-## 查看演示网页
+### 2. 环境配置
 
-1. 运行 `pnpm dev`（或 `npm run dev`）
+抓取工具依赖 Puppeteer。您必须在项目根目录下创建 `.env` 文件并指定 Chrome 系浏览器可执行文件路径
 
-## 抓取最新 Banner 数据
+```env
+PUPPETEER_EXECUTABLE_PATH=X:\path\to\chrome.exe
+```
 
-1. 运行 `pnpm grab`，抓取 B 站官网当天的 Banner 数据，会自动在 `public/assets` 目录下生成数据（以当天日期命名并自动记录）
-2. 运行 `pnpm dev` 查看效果
+### 3. 本地预览
 
-## 抓取往期 Banner 数据
+```bash
+pnpm dev
+```
 
-如果错过了某天的 Banner，可以通过 [Web Archive](https://web.archive.org/) 获取历史数据。需通过 `--archive` 参数启用抓取往期数据功能，`-d` 参数指定日期，`-u` 参数指定 Web Archive 中 bilibili 历史快照的完整 URL
+## 📥 数据抓取指南
+
+### 抓取最新 Banner
+
+实时获取 B 站官网当天的 Banner 数据，会自动在 `public/assets` 目录下生成日期命名的文件夹
+
+```bash
+pnpm grab
+```
+
+### 抓取往期 Banner
+
+如果错过了某天的 Banner，可以通过 [Web Archive](https://web.archive.org/) 网站获取历史数据
 
 ```bash
 pnpm grab --archive -d 2024-12-26 -u https://web.archive.org/web/20241226082416/https://www.bilibili.com/
 ```
 
-- `--archive` 参数为必填，表示抓取往期数据
-- `-d`: 指定日期 (YYYY-MM-DD)
-- `-u`: 指定 Web Archive 中 bilibili 历史快照的完整 URL
+**参数说明**：
 
-## 参数示例
+- `--archive`：启用往期抓取
+- `-d`：日期，格式为 YYYY-MM-DD
+- `-u`：Web Archive 完整快照 URL
 
-> [!IMPORTANT]
-> 目前自动化脚本可以生成图层所需的所有参数，但如果效果与实际有差距，可手动调整参数
+## ⚙️ 进阶参数微调
 
-打开 `public/assets` 目录下对应的 `data.json` 文件，修改其中需要调整对象的参数，然后运行 `pnpm dev` 查看效果
+> 自动化脚本可完成动态图层所需的大部分参数计算。但早期 B 站实现雪花等粒子效果时使用的是 Canvas 渲染，此类图层需要手动添加粒子配置
+>
+> 此外，若自动抓取的参数效果与实际存在偏差，亦可参照下方说明进行手动微调
 
-目前支持参数如下：
+Banner 配置文件位于 `public/assets/{YYYY-MM-DD[...]}/data.json`（文件夹通常以日期开头，并可能带有描述性后缀），找到对应目录下的 `data.json` 文件进行调整
 
-| 属性    | 类型   | 说明                                                   |
-| ------- | ------ | ------------------------------------------------------ |
-| a       | number | 水平移动幅度，数值越大偏移越明显（支持正负值）         |
-| deg     | number | 旋转幅度，数值越大旋转角度越大（支持正负值）           |
-| g       | number | 垂直移动（重力）幅度，数值越大偏移越明显（支持正负值） |
-| f       | number | 缩放比例，对应 CSS `transform: scale`                  |
-| opacity | array  | 透明度变化区间，格式：`[default, leftMax, rightMax]`   |
-| blur    | array  | 模糊度变化区间，格式：`[default, leftMax, rightMax]`   |
+<details>
+<summary><b>动态图层 (MotionLayer) 配置说明</b></summary>
 
-> 注：正负值会影响变化的方向
+| 属性            | 类型     | 说明                                           |
+| :-------------- | :------- | :--------------------------------------------- |
+| **xSpeed**      | `number` | 水平偏移速度（正负影响位移方向）               |
+| **ySpeed**      | `number` | 垂直偏移速度（正负影响位移方向）               |
+| **scaleSpeed**  | `number` | 缩放速度，对应 `transform: scale` 的变换比例   |
+| **rotateSpeed** | `number` | 旋转速度（正负影响偏移角度）                   |
+| **opacity**     | `array`  | 透明度变化区间：`[default, leftMax, rightMax]` |
+| **blur**        | `array`  | 模糊度变化区间：`[default, leftMax, rightMax]` |
 
-## 项目开发历程
+</details>
 
-> 以下文章由原作者 [Shawn Phang](https://github.com/palxiao) 撰写，详细记录了该项目的技术原理与实现过程。
+<details>
+<summary><b>Canvas 粒子图层 (ParticleLayer) 配置说明</b></summary>
+
+B 站早期实现雪花等粒子效果时使用的是 Canvas 渲染层，需手动在 `data.json` 中添加配置（近期 Banner 多改用 WebM 视频实现渲染）
+
+| 属性             | 类型               | 说明                                         |
+| :--------------- | :----------------- | :------------------------------------------- |
+| **type**         | `"particle"`       | 固定值，标识为粒子图层                       |
+| **srcs**         | `string[]`         | 粒子图片素材路径数组，会从中随机选择素材渲染 |
+| **count**        | `number`           | 粒子总数                                     |
+| **speedRange**   | `[number, number]` | 移动速度范围 `[Min, Max]`                    |
+| **angleRange**   | `[number, number]` | 飘落角度范围（度）`[Min, Max]`               |
+| **scaleRange**   | `[number, number]` | 缩放比例范围 `[Min, Max]`                    |
+| **opacityRange** | `[number, number]` | 透明度范围 `[Min, Max]`                      |
+
+</details>
+
+## 📚 项目开发历程
+
+> 以下文章由原作者 [Shawn Phang](https://github.com/palxiao) 撰写，详细记录了该项目的技术原理与实现过程
 
 - [复刻 Bilibili 首页头图的视差交互效果技术原理详解](https://juejin.cn/post/7269385060611997711)
 - [三分钟复刻B站首页动态Banner](https://juejin.cn/post/7288331623992688680)
 - [一键自动1比1复刻 B 站首页动态 Banner](https://juejin.cn/post/7295720738568159267)
 
-## 鸣谢
+## 🤝 鸣谢
 
-- 原项目：[palxiao/bilibili-banner](https://github.com/palxiao/bilibili-banner)
+- **原项目**：[palxiao/bilibili-banner](https://github.com/palxiao/bilibili-banner)
+- **部分素材来源**：[Cloudtq/bilibili-banner](https://github.com/Cloudtq/bilibili-banner/tree/main), [web.archive.org](docs/README.md)
 
-- 部分素材来源：[Cloudtq/bilibili-banner](https://github.com/Cloudtq/bilibili-banner/tree/main), [web.archive.org](docs/README.md)
+最后，感谢 [Bilibili](https://www.bilibili.com) 设计师们带来的精美艺术作品❤️

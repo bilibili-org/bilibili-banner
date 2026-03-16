@@ -1,8 +1,9 @@
-import puppeteer from "puppeteer";
+import puppeteer, { Browser, Page } from "puppeteer";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
+import type { Layers, MotionLayer, BannerManifest } from "../src/core/types";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -11,18 +12,40 @@ const DEFAULT_SCREEN_WIDTH = 1650;
 const DEFAULT_SCREEN_HEIGHT = 800;
 const DEFAULT_MOUSE_MOVE_DISTANCE = 1000;
 
+// ─────────────────────── Internal Types ───────────────────────
+
+interface LayerMetadata {
+  tagName: string;
+  opacity: number[];
+  transform: number[];
+  baseScale: number;
+  width: number;
+  height: number;
+  src: string;
+  blur?: number | number[];
+  xSpeed: number;
+  ySpeed?: number;
+  rotateSpeed?: number;
+  scaleSpeed?: number;
+}
+
+interface LayerState {
+  translateX: number;
+  translateY: number;
+  matrixA: number;
+  matrixB: number;
+  scaleS: number;
+  opacity: number;
+  blur: number;
+}
+
 // ─────────────────────── Utility Functions ───────────────────────
 
-/**
- * 延迟指定时间
- * @param {number} ms - 毫秒数
- * @returns {Promise<void>}
- */
-function sleep(ms) {
+function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function generateDate() {
+function generateDate(): string {
   const today = new Date();
   const y = today.getFullYear();
   const m = String(today.getMonth() + 1).padStart(2, "0");
@@ -30,7 +53,7 @@ function generateDate() {
   return `${y}-${m}-${d}`;
 }
 
-function prepareDataDir(dataDir) {
+function prepareDataDir(dataDir: string): void {
   const dirName = path.basename(dataDir);
   if (fs.existsSync(dataDir)) {
     fs.readdirSync(dataDir).forEach((file) => {
@@ -45,7 +68,7 @@ function prepareDataDir(dataDir) {
 
 // ─────────────────────── Puppeteer Functions ───────────────────────
 
-async function initBrowser() {
+async function initBrowser(): Promise<{ browser: Browser; page: Page }> {
   const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
   if (!executablePath) {
     throw new Error(
@@ -55,7 +78,7 @@ async function initBrowser() {
   }
 
   const browser = await puppeteer.launch({
-    headless: "new",
+    headless: true,
     executablePath,
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
@@ -67,19 +90,23 @@ async function initBrowser() {
   return { browser, page };
 }
 
-// ─────────────────────── Banner Setup Functions ───────────────────────
-
-async function setupOfficialBanner(page, targetUrl) {
+async function setupOfficialBanner(
+  page: Page,
+  targetUrl: string,
+): Promise<void> {
   console.log(`正在加载官网页面: ${targetUrl}`);
   await page.goto(targetUrl, { waitUntil: "domcontentloaded" });
   await sleep(2000);
   await page.goto(targetUrl, { waitUntil: "domcontentloaded" });
-
+  await sleep(2000);
   console.log("正在检测动态 Banner...");
   await page.waitForSelector(".animated-banner", { timeout: 10000 });
 }
 
-async function setupArchiveBanner(page, targetUrl) {
+async function setupArchiveBanner(
+  page: Page,
+  targetUrl: string,
+): Promise<void> {
   console.log(`正在加载 Archive 页面: ${targetUrl}`);
   await page.goto(targetUrl, { waitUntil: "networkidle2", timeout: 60000 });
 
@@ -98,20 +125,20 @@ async function setupArchiveBanner(page, targetUrl) {
   } catch (e) {
     console.warn("未直接检测到 .animated-banner，尝试滚动页面...");
     await page.evaluate(() => window.scrollTo(0, 100));
-    await sleep(3000);
+    await sleep(5000);
     await page.waitForSelector(".animated-banner", { timeout: 10000 });
   }
 }
 
 // ─────────────────────── Core Logic Functions ───────────────────────
 
-async function parseLayers(page) {
+async function parseLayers(page: Page): Promise<LayerMetadata[]> {
   console.log("正在解析图层元数据...");
-  const data = [];
+  const data: LayerMetadata[] = [];
   const layerElements = await page.$$(".animated-banner .layer");
   for (const layerEl of layerElements) {
     const layerData = await page.evaluate((el) => {
-      const child = el.firstElementChild;
+      const child = el.firstElementChild as HTMLImageElement | HTMLVideoElement;
       const style = window.getComputedStyle(child);
       const matrix = new DOMMatrix(style.transform);
 
@@ -131,11 +158,11 @@ async function parseLayers(page) {
         ],
         transform: [matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f],
         baseScale: Math.sqrt(matrix.a * matrix.a + matrix.b * matrix.b),
-        width: child.width,
-        height: child.height,
-        src: child.src,
+        width: (child as HTMLImageElement).width || 0,
+        height: (child as HTMLImageElement).height || 0,
+        src: (child as HTMLImageElement).src || "",
         blur: blur,
-        a: 0.01,
+        xSpeed: 0.01,
       };
     }, layerEl);
 
@@ -144,37 +171,29 @@ async function parseLayers(page) {
   return data;
 }
 
-/**
- * 转换元数据中的 src 为本地相对路径，并返回原始远端 URL 列表
- * @param {Array} data
- * @param {string} dataDir
- * @returns {string[]} remoteUrls
- */
-function transformLayerSrc(data, dataDir) {
+function transformLayerSrc(data: LayerMetadata[], dataDir: string): string[] {
   const dirName = path.basename(dataDir);
-  const urls = [];
+  const urls: string[] = [];
   for (const item of data) {
     if (item.src) {
       urls.push(item.src);
-      const fileName = item.src.split("/").pop().split("?")[0];
+      const fileName = item.src.split("/").pop()?.split("?")[0] || "unknown";
       item.src = `./assets/${dirName}/${fileName}`;
     }
   }
   return urls;
 }
 
-/**
- * 遍历 URL 列表下载所有素材
- * @param {string[]} urls
- * @param {import('puppeteer').Page} page
- * @param {string} dataDir
- */
-async function downloadAssets(urls, page, dataDir) {
+async function downloadAssets(
+  urls: string[],
+  page: Page,
+  dataDir: string,
+): Promise<void> {
   const total = urls.length;
   console.log(`开始下载资源素材 (共 ${total} 个)...`);
   let current = 0;
   for (const url of urls) {
-    const fileName = url.split("/").pop().split("?")[0];
+    const fileName = url.split("/").pop()?.split("?")[0] || "unknown";
     const filePath = path.join(dataDir, fileName);
 
     try {
@@ -187,7 +206,7 @@ async function downloadAssets(urls, page, dataDir) {
       fs.writeFileSync(filePath, Buffer.from(content.buffer));
       current++;
       process.stdout.write(`\r下载进度: (${current}/${total}) `);
-    } catch (e) {
+    } catch (e: any) {
       process.stdout.write("\n");
       console.warn(`下载素材失败: ${url}`, e.message);
     }
@@ -195,15 +214,12 @@ async function downloadAssets(urls, page, dataDir) {
   process.stdout.write("\n");
 }
 
-/**
- * 采集当前所有图层的视觉状态
- */
-async function captureLayerStates(page) {
+async function captureLayerStates(page: Page): Promise<LayerState[]> {
   const layerElements = await page.$$(".animated-banner .layer");
-  const states = [];
+  const states: LayerState[] = [];
   for (const el of layerElements) {
     const state = await page.evaluate((el) => {
-      const child = el.firstElementChild;
+      const child = el.firstElementChild as HTMLElement;
       const style = window.getComputedStyle(child);
       const matrix = new DOMMatrix(style.transform);
 
@@ -229,44 +245,40 @@ async function captureLayerStates(page) {
   return states;
 }
 
-function calcFinalData(layerData, leftStates, rightStates) {
-  for (let i = 0; i < layerData.length; i++) {
-    const item = layerData[i];
-    const left = leftStates[i];
-    const right = rightStates[i];
-
-    if (!left || !right) {
-      throw new Error(`图层状态不完整: ${item.src}`);
-    }
-
-    calcAcceleration(item, left, right);
-    calcOpacity(item, left, right);
-    calcBlur(item, left, right);
-    calcGravity(item, left, right);
-    calcDeg(item, left, right);
-    calcScale(item, left, right);
-  }
-}
-
-function calcAcceleration(item, left, right) {
-  const origX = item.transform[4];
+function calcXSpeed(
+  layerMetadata: LayerMetadata,
+  left: LayerState,
+  right: LayerState,
+): void {
+  const origX = layerMetadata.transform[4];
   const aLeft = (left.translateX - origX) / -DEFAULT_MOUSE_MOVE_DISTANCE;
   const aRight = (right.translateX - origX) / DEFAULT_MOUSE_MOVE_DISTANCE;
-  item.a = Number(((aLeft + aRight) / 2).toFixed(8));
+  layerMetadata.xSpeed = Number(((aLeft + aRight) / 2).toFixed(8));
 }
 
-function calcGravity(item, left, right) {
-  const origY = item.transform[5];
+function calcYSpeed(
+  layerMetadata: LayerMetadata,
+  left: LayerState,
+  right: LayerState,
+): void {
+  const origY = layerMetadata.transform[5];
   const gLeft = (left.translateY - origY) / -DEFAULT_MOUSE_MOVE_DISTANCE;
   const gRight = (right.translateY - origY) / DEFAULT_MOUSE_MOVE_DISTANCE;
   const g = (gLeft + gRight) / 2;
   if (Math.abs(g) > 1e-7) {
-    item.g = Number(g.toFixed(8));
+    layerMetadata.ySpeed = Number(g.toFixed(8));
   }
 }
 
-function calcDeg(item, left, right) {
-  const baseRad = Math.atan2(item.transform[1], item.transform[0]);
+function calcRotateSpeed(
+  layerMetadata: LayerMetadata,
+  left: LayerState,
+  right: LayerState,
+): void {
+  const baseRad = Math.atan2(
+    layerMetadata.transform[1],
+    layerMetadata.transform[0],
+  );
   const leftRad = Math.atan2(left.matrixB, left.matrixA);
   const rightRad = Math.atan2(right.matrixB, right.matrixA);
 
@@ -275,42 +287,58 @@ function calcDeg(item, left, right) {
   const deg = (dDegLeft + dDegRight) / 2;
 
   if (Math.abs(deg) > 1e-8) {
-    item.deg = Number(deg.toFixed(9));
+    layerMetadata.rotateSpeed = Number(deg.toFixed(9));
   }
 }
 
-function calcScale(item, left, right) {
-  const base = item.baseScale ?? 1;
+function calcScaleSpeed(
+  layerMetadata: LayerMetadata,
+  left: LayerState,
+  right: LayerState,
+): void {
+  const base = layerMetadata.baseScale ?? 1;
   const fLeft = (left.scaleS - base) / -DEFAULT_MOUSE_MOVE_DISTANCE;
   const fRight = (right.scaleS - base) / DEFAULT_MOUSE_MOVE_DISTANCE;
   const f = (fLeft + fRight) / 2;
   if (Math.abs(f) > 1e-8) {
-    item.f = Number(f.toFixed(10));
+    layerMetadata.scaleSpeed = Number(f.toFixed(10));
   }
-  delete item.baseScale;
 }
 
-function calcOpacity(item, left, right) {
-  const defOp = item.opacity[0];
+function calcOpacityRange(
+  layerMetadata: LayerMetadata,
+  left: LayerState,
+  right: LayerState,
+): void {
+  const defOp = layerMetadata.opacity[0];
 
-  const snap = (captured) => {
+  const snap = (captured: number) => {
     if (defOp === 0) return captured > 0 ? 1 : 0;
     if (defOp === 1) return captured < 1 ? 0 : 1;
-    return captured; // 回退逻辑，尽管 B 站通常只有 0 和 1
+    return captured;
   };
 
-  item.opacity = [defOp, snap(left.opacity), snap(right.opacity)];
+  layerMetadata.opacity = [defOp, snap(left.opacity), snap(right.opacity)];
 }
 
-function calcBlur(item, left, right) {
+function calcBlur(
+  layerMetadata: LayerMetadata,
+  left: LayerState,
+  right: LayerState,
+): void {
   const ratio = Math.min(
     DEFAULT_MOUSE_MOVE_DISTANCE / (DEFAULT_SCREEN_WIDTH / 2),
     1,
   );
 
-  const defBlur = item.blur || 0;
+  const defBlur =
+    layerMetadata.blur !== undefined
+      ? typeof layerMetadata.blur === "number"
+        ? layerMetadata.blur
+        : layerMetadata.blur[0]
+      : 0;
 
-  const process = (captured) => {
+  const process = (captured: number) => {
     const extrapolated = defBlur + (captured - defBlur) / ratio;
     const clamped = Math.max(0, extrapolated);
     return clamped < 1 ? 0 : Math.ceil(clamped);
@@ -321,19 +349,48 @@ function calcBlur(item, left, right) {
 
   if (defBlur === blurLeft && defBlur === blurRight) {
     if (defBlur !== 0) {
-      item.blur = defBlur;
+      layerMetadata.blur = defBlur;
     } else {
-      delete item.blur;
+      delete (layerMetadata as any).blur;
     }
   } else {
-    item.blur = [defBlur, blurLeft, blurRight];
+    layerMetadata.blur = [defBlur, blurLeft, blurRight];
   }
 }
 
-async function scrapeMoveParams(page, layerData) {
+function calcLayerParams(
+  layerMetadatas: LayerMetadata[],
+  leftStates: LayerState[],
+  rightStates: LayerState[],
+): void {
+  for (let i = 0; i < layerMetadatas.length; i++) {
+    const layerMetadata = layerMetadatas[i];
+    const left = leftStates[i];
+    const right = rightStates[i];
+
+    if (!left || !right) {
+      throw new Error(`图层状态不完整: ${layerMetadata.src}`);
+    }
+
+    calcXSpeed(layerMetadata, left, right);
+    calcOpacityRange(layerMetadata, left, right);
+    calcBlur(layerMetadata, left, right);
+    calcYSpeed(layerMetadata, left, right);
+    calcRotateSpeed(layerMetadata, left, right);
+    calcScaleSpeed(layerMetadata, left, right);
+  }
+}
+
+async function scrapeMoveParams(
+  page: Page,
+  layerMetadatas: LayerMetadata[],
+): Promise<void> {
   const element = await page.$(".animated-banner");
-  const { x, y } = await element.boundingBox();
-  const viewportWidth = page.viewport().width;
+  if (!element) return;
+  const box = await element.boundingBox();
+  if (!box) return;
+  const { x, y } = box;
+  const viewportWidth = page.viewport()?.width || DEFAULT_SCREEN_WIDTH;
 
   const leftX = x + 100;
   const rightX = x + viewportWidth - 100;
@@ -342,7 +399,6 @@ async function scrapeMoveParams(page, layerData) {
   const resetY = y + 200; // Banner 下方
 
   // 1. 计算右移 (从左边缘开始)
-  console.log("正在计算右移参数...");
   await page.mouse.move(leftX, centerY);
   await page.mouse.move(leftX + DEFAULT_MOUSE_MOVE_DISTANCE, centerY, {
     steps: 10,
@@ -355,7 +411,6 @@ async function scrapeMoveParams(page, layerData) {
   await sleep(1500);
 
   // 2. 计算左移 (从右边缘开始)
-  console.log("正在计算左移参数...");
   await page.mouse.move(rightX, centerY);
   await page.mouse.move(rightX - DEFAULT_MOUSE_MOVE_DISTANCE, centerY, {
     steps: 10,
@@ -363,20 +418,84 @@ async function scrapeMoveParams(page, layerData) {
   await sleep(1500);
   const leftStates = await captureLayerStates(page);
 
-  calcFinalData(layerData, leftStates, rightStates);
+  calcLayerParams(layerMetadatas, leftStates, rightStates);
 }
 
-function dumpLayerData(data, dataDir) {
+/**
+ * Custom sort function for object keys
+ * Priority: type, src, width, height, transform, xSpeed, ySpeed...
+ * Others: alphabetical
+ */
+function sortObjectKeys(obj: any): any {
+  const priorityKeys = [
+    "type",
+    "src",
+    "srcs",
+    "width",
+    "height",
+    "transform",
+    "xSpeed",
+    "ySpeed",
+  ];
+  const allKeys = Object.keys(obj);
+
+  const presentPriorityKeys = priorityKeys.filter((key) =>
+    allKeys.includes(key),
+  );
+  const otherKeys = allKeys.filter((key) => !priorityKeys.includes(key)).sort();
+
+  const sortedObj: any = {};
+
+  for (const key of presentPriorityKeys) {
+    sortedObj[key] = obj[key];
+  }
+
+  for (const key of otherKeys) {
+    sortedObj[key] = obj[key];
+  }
+
+  return sortedObj;
+}
+
+function dumpLayerMetadatas(
+  layerMetadatas: LayerMetadata[],
+  dataDir: string,
+): void {
   const outputPath = path.join(dataDir, "data.json");
-  fs.writeFileSync(outputPath, JSON.stringify(data, null, 2));
-  console.log(`已写入 data.json 配置文件`);
+
+  // Transform RawLayerData to Layers type for storage
+  const finalLayers: Layers = layerMetadatas.map((item) => {
+    if (item.tagName !== "img" && item.tagName !== "video") {
+      throw new Error(
+        `[Grabber] 发现未知图层类型: ${item.tagName}, 目前仅支持 img 和 video, 请新增处理逻辑`,
+      );
+    }
+    const layer: MotionLayer = {
+      type: item.tagName,
+      src: item.src,
+      width: item.width,
+      height: item.height,
+      transform: item.transform,
+      opacity: item.opacity,
+      xSpeed: item.xSpeed,
+    };
+    if (item.blur !== undefined) layer.blur = item.blur;
+    if (item.ySpeed !== undefined) layer.ySpeed = item.ySpeed;
+    if (item.rotateSpeed !== undefined) layer.rotateSpeed = item.rotateSpeed;
+    if (item.scaleSpeed !== undefined) layer.scaleSpeed = item.scaleSpeed;
+
+    return sortObjectKeys(layer);
+  });
+
+  fs.writeFileSync(outputPath, JSON.stringify(finalLayers, null, 2));
+  console.log("已写入 data.json 配置文件");
 }
 
-function updateBannerManifest(date) {
-  const configFilePath = path.resolve(__dirname, "../src/data/banners.json");
+function updateBannerManifest(date: string): void {
+  const configFilePath = path.resolve(__dirname, "../src/data/banner.json");
   const bannerName = date;
 
-  let banners = [];
+  let banners: BannerManifest[] = [];
   try {
     if (fs.existsSync(configFilePath)) {
       banners = JSON.parse(fs.readFileSync(configFilePath, "utf8"));
@@ -384,35 +503,37 @@ function updateBannerManifest(date) {
 
     const existingIndex = banners.findIndex((b) => b.date === date);
     if (existingIndex !== -1) {
-      const variantExists = banners[existingIndex].variants.some(
+      const variantExists = (banners[existingIndex].configs || []).some(
         (v) => v.name === bannerName,
       );
       if (!variantExists) {
-        banners[existingIndex].variants.push({ name: bannerName });
+        if (!banners[existingIndex].configs)
+          banners[existingIndex].configs = [];
+        banners[existingIndex].configs.push({ name: bannerName });
       }
     } else {
       banners.push({
         date,
-        variants: [{ name: bannerName }],
+        configs: [{ name: bannerName }],
       });
     }
 
     banners.sort((a, b) => a.date.localeCompare(b.date));
 
     fs.writeFileSync(configFilePath, JSON.stringify(banners, null, 2), "utf8");
-    console.log("已更新 banners.json 配置文件");
-  } catch (error) {
+    console.log("已更新 banner.json 配置文件");
+  } catch (error: any) {
     console.error(`更新配置文件失败: ${error.message}`);
   }
 }
 
 // ─────────────────────── Orchestrator ───────────────────────
 
-async function runGrabber(date, targetUrl) {
+async function runGrabber(date: string, targetUrl: string): Promise<boolean> {
   const dataDir = path.resolve(__dirname, `../public/assets/${date}`);
   const isArchive = targetUrl.includes("web.archive.org");
 
-  let browser;
+  let browser: Browser | undefined;
   try {
     const browserResult = await initBrowser();
     browser = browserResult.browser;
@@ -441,11 +562,11 @@ async function runGrabber(date, targetUrl) {
     updateBannerManifest(date);
 
     prepareDataDir(dataDir);
-    dumpLayerData(layerData, dataDir);
+    dumpLayerMetadatas(layerData, dataDir);
     await downloadAssets(remoteUrls, page, dataDir);
     console.log("抓取完成！运行 pnpm dev 查看效果");
     return true;
-  } catch (error) {
+  } catch (error: any) {
     console.error("抓取出错:", error.message);
     return false;
   } finally {
@@ -478,7 +599,7 @@ if (isArchive) {
   if (!date || !targetUrl) {
     console.error(
       "Archive 模式参数错误。必须包含 -d 和 -u 参数\n" +
-        "用法: node scripts/grab.js -archive -d <date> -u <url>\n",
+        "用法: tsx scripts/grab.ts --archive -d <date> -u <url>\n",
     );
     process.exit(1);
   }

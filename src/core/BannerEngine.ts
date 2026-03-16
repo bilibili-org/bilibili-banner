@@ -1,45 +1,10 @@
-import ParticleSystem, { type ParticleLayerConfig } from "./ParticleSystem";
-
-export type LayerType = "image" | "video";
-export type BannerMode = "simple-video" | "parallax";
-export type { ParticleLayerConfig };
-
-export interface BaseLayer {
-  src: string;
-  width: number;
-  height: number;
-  transform: number[]; // [a, b, c, d, tx, ty]
-  opacity?: number[]; // [default, opLeft, opRight]
-  blur?: number | number[]; // 静态数字 或 [default, blurLeft, blurRight]
-  a: number; // 补偿系数
-  g?: number; // 视差系数
-  f?: number; // 缩放系数
-  deg?: number; // 旋转角度
-  // 内部辅助数据
-  _baseTransform?: string; // 预处理后的基础矩阵字符串
-  _aCompensated?: number;
-  _gCompensated?: number;
-}
-
-export interface ImageLayer extends BaseLayer {
-  type: "image";
-}
-
-export interface VideoLayer extends BaseLayer {
-  type: "video";
-}
-
-export type ParallaxLayer = ImageLayer | VideoLayer;
-
-export interface SimpleVideoData {
-  mode: "simple-video";
-  src: string;
-}
-
-export interface StandardBannerData {
-  type: BannerMode;
-  payload: Array<ParallaxLayer | ParticleLayerConfig> | SimpleVideoData;
-}
+import ParticleSystem from "./ParticleSystem";
+import type {
+  Layers,
+  MotionLayer,
+  ParticleLayer,
+  SimpleVideoLayer,
+} from "./types";
 
 interface EngineState {
   initX: number;
@@ -55,7 +20,7 @@ interface EngineConfig {
 
 export default class BannerEngine {
   private container: HTMLElement | null;
-  private allLayersData: ParallaxLayer[] = [];
+  private allLayersData: MotionLayer[] = [];
   private layers: NodeListOf<HTMLElement> | null = null;
   private compensate: number = 1;
   private simpleVideoMode: boolean = false;
@@ -156,9 +121,9 @@ export default class BannerEngine {
 
   /**
    * 更新数据源并重新渲染 (防腐层 + 策略路由)
-   * @param {StandardBannerData} dto - 必须接受格式化后的标准数据
+   * @param {Layers} dto - 必须接受格式化后的标准数据
    */
-  public updateData(dto: StandardBannerData): void {
+  public updateData(dto: Layers): void {
     this._stopAnimation();
     this._destroyVideos();
     this._particleSystem?.dispose();
@@ -167,38 +132,38 @@ export default class BannerEngine {
 
     this.layers = null;
 
-    switch (dto.type) {
-      case "simple-video":
-        this.simpleVideoMode = true;
-        this.allLayersData = [];
-        this._renderSimpleVideo(dto.payload as SimpleVideoData);
-        break;
-      case "parallax": {
-        this.simpleVideoMode = false;
-        this._calcCompensate();
+    const rawPayload = dto;
 
-        const rawPayload = dto.payload as Array<
-          ParallaxLayer | ParticleLayerConfig
-        >;
-        const parallaxLayers = rawPayload.filter(
-          (item): item is ParallaxLayer => item.type !== "particle",
-        );
-        const particleConfig =
-          rawPayload.find(
-            (item): item is ParticleLayerConfig => item.type === "particle",
-          ) || null;
-        this._initParallaxData(parallaxLayers);
-        this._renderParallax();
+    // 检测是否存在 simple-video 层，存在则进入单视频模式
+    const simpleVideoItem = rawPayload.find(
+      (item): item is SimpleVideoLayer => item.type === "simple-video",
+    );
 
-        if (particleConfig && this.container && this._particleCanvas) {
-          const ps = new ParticleSystem(this._particleCanvas, particleConfig);
-          this._particleSystem = ps;
-          ps.start();
-        }
-        break;
-      }
-      default:
-        console.warn("[BannerEngine] Unknown banner target type.");
+    if (simpleVideoItem) {
+      this.simpleVideoMode = true;
+      this.allLayersData = [];
+      this._renderSimpleVideo(simpleVideoItem.src);
+      return;
+    }
+
+    this.simpleVideoMode = false;
+    this._calcCompensate();
+
+    const motionLayers = rawPayload.filter(
+      (item): item is MotionLayer =>
+        item.type === "img" || item.type === "video",
+    );
+    const particleConfig =
+      rawPayload.find(
+        (item): item is ParticleLayer => item.type === "particle",
+      ) || null;
+    this._initParallaxData(motionLayers);
+    this._renderParallax();
+
+    if (particleConfig && this.container && this._particleCanvas) {
+      const ps = new ParticleSystem(this._particleCanvas, particleConfig);
+      this._particleSystem = ps;
+      ps.start();
     }
   }
 
@@ -230,7 +195,7 @@ export default class BannerEngine {
   // ─────────────────────── 微观构建工厂 (DOM Factory) ───────────────────────
 
   private _createLayerElement(
-    item: ParallaxLayer,
+    item: MotionLayer,
   ): HTMLImageElement | HTMLVideoElement {
     if (item.type === "video") {
       const child = document.createElement("video");
@@ -247,7 +212,7 @@ export default class BannerEngine {
     }
   }
 
-  private _initParallaxData(layers: ParallaxLayer[]): void {
+  private _initParallaxData(layers: MotionLayer[]): void {
     this.allLayersData = layers.map((item) => {
       const baseTransform = [...item.transform];
       baseTransform[4] *= this.compensate;
@@ -259,8 +224,8 @@ export default class BannerEngine {
       return {
         ...item,
         _baseTransform,
-        _aCompensated: item.a,
-        _gCompensated: item.g || 0,
+        _xSpeedCompensated: item.xSpeed,
+        _ySpeedCompensated: item.ySpeed || 0,
       };
     });
   }
@@ -268,13 +233,13 @@ export default class BannerEngine {
   /**
    * 单视频模式渲染管线
    */
-  private _renderSimpleVideo(data: SimpleVideoData): void {
+  private _renderSimpleVideo(src: string): void {
     if (!this.container) return;
     const wrapper = document.createElement("div");
     wrapper.className = "simple-video-container";
 
     const video = document.createElement("video");
-    video.src = import.meta.env.BASE_URL + data.src.replace(/^\//, "");
+    video.src = import.meta.env.BASE_URL + src.replace(/^\//, "");
     video.loop = true;
     video.autoplay = true;
     video.muted = true;
@@ -368,7 +333,7 @@ export default class BannerEngine {
       const layer = this.layers[i];
       const item = this.allLayersData[i];
 
-      const a = item._aCompensated || 0;
+      const a = item._xSpeedCompensated || 0;
 
       let currentMoveX = moveX;
       if (isHoming) {
@@ -376,15 +341,15 @@ export default class BannerEngine {
       }
 
       const move = currentMoveX * a;
-      const s = item.f ? item.f * currentMoveX + 1 : 1;
-      const g = currentMoveX * (item._gCompensated || 0);
+      const s = item.scaleSpeed ? item.scaleSpeed * currentMoveX + 1 : 1;
+      const g = currentMoveX * (item._ySpeedCompensated || 0);
 
       let finalTransform = `${item._baseTransform} matrix(${s}, 0, 0, ${s}, ${move}, ${g})`;
 
-      if (item.deg) {
+      if (item.rotateSpeed) {
         const currentDeg = isHoming
-          ? this._lerp(item.deg * moveX, 0, progress as number)
-          : item.deg * moveX;
+          ? this._lerp(item.rotateSpeed * moveX, 0, progress as number)
+          : item.rotateSpeed * moveX;
         finalTransform += ` rotate(${currentDeg * BannerEngine.DEG2RAD}deg)`;
       }
 

@@ -1,12 +1,4 @@
-export interface ParticleLayerConfig {
-  type: "particle";
-  srcs: string[];
-  count: number;
-  speedRange: [number, number];
-  angleRange: [number, number];
-  sizeRange: [number, number];
-  opacityRange: [number, number];
-}
+import type { ParticleLayer } from "./types";
 
 interface Particle {
   image: HTMLImageElement;
@@ -29,13 +21,13 @@ function rand(min: number, max: number): number {
 export default class ParticleSystem {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
-  private config: ParticleLayerConfig;
+  private config: ParticleLayer;
   private particles: Particle[] = [];
   private images: HTMLImageElement[] = [];
   private rafId: number = 0;
   private disposed: boolean = false;
 
-  constructor(canvas: HTMLCanvasElement, config: ParticleLayerConfig) {
+  constructor(canvas: HTMLCanvasElement, config: ParticleLayer) {
     this.canvas = canvas;
     const context = canvas.getContext("2d");
 
@@ -97,14 +89,14 @@ export default class ParticleSystem {
   }
 
   private _initParticles(): void {
-    const { count, speedRange, angleRange, sizeRange, opacityRange } =
+    const { count, speedRange, angleRange, scaleRange, opacityRange } =
       this.config;
     const w = this.canvas.width;
     const h = this.canvas.height;
 
     this.particles = Array.from({ length: count }, () => {
       const img = this.images[Math.floor(Math.random() * this.images.length)];
-      const scale = rand(sizeRange[0], sizeRange[1]);
+      const scale = rand(scaleRange[0], scaleRange[1]);
       const angleDeg = rand(angleRange[0], angleRange[1]);
       const speed = rand(speedRange[0], speedRange[1]);
       // 将角度转换成 x/y 分量的速度比例

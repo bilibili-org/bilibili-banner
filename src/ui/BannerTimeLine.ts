@@ -1,15 +1,15 @@
-import type { LoadedBannerData, LoadedVariant } from "../core/BannerDataLoader";
+import type { Banner, DailyBanner } from "../core/types";
 
 export interface BannerTimeLineOptions {
   containerId?: string;
-  onVariantSelect?: (variant: LoadedVariant) => void;
+  onVariantSelect?: (variant: Banner) => void;
 }
 
 export default class BannerTimeLine {
   private container: HTMLElement | null;
   private _bodyDropdowns: HTMLDivElement[] = [];
-  private onVariantSelect?: (variant: LoadedVariant) => void;
-  private _itemDataMap: WeakMap<HTMLElement, LoadedBannerData> = new WeakMap();
+  private onVariantSelect?: (variant: Banner) => void;
+  private _itemDataMap: WeakMap<HTMLElement, DailyBanner> = new WeakMap();
   private _activeDropdownTimer?: number;
 
   private _boundHandleClick: (e: MouseEvent) => void;
@@ -53,7 +53,7 @@ export default class BannerTimeLine {
    * @param {LoadedBannerData[]} filteredData
    * @param {string} [targetPath] - 期望初始选中的变体路径
    */
-  public render(filteredData: LoadedBannerData[], targetPath?: string): void {
+  public render(filteredData: DailyBanner[], targetPath?: string): void {
     if (!this.container) return;
 
     this._cleanupDropdowns();
@@ -65,7 +65,7 @@ export default class BannerTimeLine {
 
     if (targetPath) {
       filteredData.forEach((item, i) => {
-        const vIdx = item.variants.findIndex((v) => v.path === targetPath);
+        const vIdx = item.banners.findIndex((v) => v.path === targetPath);
         if (vIdx !== -1) {
           activeItemIndex = i;
           activeVariantIndex = vIdx;
@@ -96,7 +96,7 @@ export default class BannerTimeLine {
     if (filteredData.length > 0) {
       const targetItem = filteredData[activeItemIndex];
       if (this.onVariantSelect) {
-        this.onVariantSelect(targetItem.variants[activeVariantIndex]);
+        this.onVariantSelect(targetItem.banners[activeVariantIndex]);
       }
     }
   }
@@ -117,12 +117,12 @@ export default class BannerTimeLine {
   private _hideDropdownScheduledBound = () => this._hideDropdownScheduled();
 
   private _createTimelineItem(
-    item: LoadedBannerData,
+    item: DailyBanner,
     isActive: boolean,
     activeVariantIndex: number = 0,
   ): HTMLDivElement {
     const itemEl = document.createElement("div");
-    const activeVariantFailed = item.variants[activeVariantIndex]?.failed;
+    const activeVariantFailed = item.banners[activeVariantIndex]?.failed;
     itemEl.className = `timeline-item ${isActive ? "active" : ""} ${activeVariantFailed ? "load-failed" : ""}`;
 
     const content = document.createElement("div");
@@ -136,14 +136,14 @@ export default class BannerTimeLine {
     name.className = "item-name";
 
     const nameText = document.createElement("span");
-    nameText.innerText = item.variants[activeVariantIndex].name;
+    nameText.innerText = item.banners[activeVariantIndex].name;
     name.appendChild(nameText);
 
     content.appendChild(dateStr);
     content.appendChild(name);
     itemEl.appendChild(content);
 
-    if (item.variants.length > 1) {
+    if (item.banners.length > 1) {
       itemEl.classList.add("has-variants");
 
       const arrow = document.createElementNS(
@@ -164,7 +164,7 @@ export default class BannerTimeLine {
       dropdown.id = dropdownId;
       dropdown.className = "variant-dropdown";
 
-      item.variants.forEach((variant: LoadedVariant, index: number) => {
+      item.banners.forEach((variant: Banner, index: number) => {
         const btn = document.createElement("div");
         btn.className = `variant-item ${index === activeVariantIndex && isActive ? "active" : ""} ${variant.failed ? "load-failed" : ""}`;
         btn.innerText = variant.name;
@@ -224,7 +224,7 @@ export default class BannerTimeLine {
     const itemData = this._itemDataMap.get(itemEl);
     if (!itemData) return;
 
-    const firstVariant = itemData.variants[0];
+    const firstVariant = itemData.banners[0];
     // 失败的单变体条目不触发渲染
     if (firstVariant.failed) return;
 

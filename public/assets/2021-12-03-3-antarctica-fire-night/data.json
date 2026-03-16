@@ -1,4 +1,6 @@
-{
-  "mode": "simple-video",
-  "src": "/assets/2021-12-03-3-antarctica-fire-night/antarctica-fire-night.webm"
-}
+[
+  {
+    "type": "simple-video",
+    "src": "/assets/2021-12-03-3-antarctica-fire-night/antarctica-fire-night.webm"
+  }
+]

@@ -1,24 +1,22 @@
 import "./styles/index.css";
-import BannerDataLoader from "./core/BannerDataLoader";
+import { loadBanners } from "./core/BannerDataLoader";
 import BannerEngine from "./core/BannerEngine";
 import BannerTimeLine from "./ui/BannerTimeLine";
 import YearSelector from "./ui/YearSelector";
 
-const loader = new BannerDataLoader();
 const engine = new BannerEngine("#app");
 
 const PERSIST_KEY = "last_banner_path";
 
 engine.start();
 
-loader
-  .load()
+loadBanners()
   .then((data) => {
     const savedPath = localStorage.getItem(PERSIST_KEY) || "";
     let initialYear = "";
     if (savedPath) {
       const matched = data.find((item) =>
-        item.variants.some((v) => v.path === savedPath),
+        item.banners.some((v) => v.path === savedPath),
       );
       if (matched) initialYear = matched.date.split("-")[0];
     }
@@ -29,7 +27,7 @@ loader
         if (variant.failed) {
           engine.showLoadFailed(variant.path);
         } else {
-          engine.updateData(variant.data);
+          engine.updateData(variant.layers);
         }
         localStorage.setItem(PERSIST_KEY, variant.path);
       },
