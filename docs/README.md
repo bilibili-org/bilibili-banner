@@ -2,6 +2,9 @@
 
 > Wayback Machine 在爬取网页时由于种种原因，可能导致网页保存不完整，这里记录的是可以看到完整 banner 的网页链接
 
+- [2020-10-01](https://web.archive.org/web/20201010160645/https://www.bilibili.com/)
+- [2021-02-17](https://web.archive.org/web/20210217142039/https://www.bilibili.com/)
+- [2021-04-12](https://web.archive.org/web/20210412120844/https://www.bilibili.com/)
 - [2023-03-31](https://web.archive.org/web/20230331001110/https://www.bilibili.com/)
 - [2023-05-08](https://web.archive.org/web/20230508113754/https://www.bilibili.com/)
 - [2023-06-12](https://web.archive.org/web/20230612101044/https://www.bilibili.com/)
