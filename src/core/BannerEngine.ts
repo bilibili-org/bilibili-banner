@@ -213,21 +213,33 @@ export default class BannerEngine {
   }
 
   private _initParallaxData(layers: MotionLayer[]): void {
-    this.allLayersData = layers.map((item) => {
-      const baseTransform = [...item.transform];
-      baseTransform[4] *= this.compensate;
-      baseTransform[5] *= this.compensate;
+    this.allLayersData = layers
+      // opacity 三值全为 0 → 该层永久不可见，无需渲染
+      .filter((item) => {
+        const op = item.opacity;
+        return !(op && op[0] === 0 && op[1] === 0 && op[2] === 0);
+      })
+      .map((item) => {
+        const baseTransform = [...item.transform];
+        baseTransform[4] *= this.compensate;
+        baseTransform[5] *= this.compensate;
 
-      // 预先组装最内层的基础矩阵变换字符串备用
-      const _baseTransform = `matrix(${baseTransform[0]}, ${baseTransform[1]}, ${baseTransform[2]}, ${baseTransform[3]}, ${baseTransform[4]}, ${baseTransform[5]})`;
+        // 预先组装最内层的基础矩阵变换字符串备用
+        const _baseTransform = `matrix(${baseTransform[0]}, ${baseTransform[1]}, ${baseTransform[2]}, ${baseTransform[3]}, ${baseTransform[4]}, ${baseTransform[5]})`;
 
-      return {
-        ...item,
-        _baseTransform,
-        _xSpeedCompensated: item.xSpeed,
-        _ySpeedCompensated: item.ySpeed || 0,
-      };
-    });
+        // opacity 三值全为 1 → 恒显示，移除字段使 _animate 直接跳过
+        const op = item.opacity;
+        const opacity =
+          op && (op[0] !== 1 || op[1] !== 1 || op[2] !== 1) ? op : undefined;
+
+        return {
+          ...item,
+          opacity,
+          _baseTransform,
+          _xSpeedCompensated: item.xSpeed,
+          _ySpeedCompensated: item.ySpeed || 0,
+        };
+      });
   }
 
   /**
