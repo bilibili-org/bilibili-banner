@@ -1,6 +1,8 @@
-部分素材来源于 [Wayback Machine](https://web.archive.org/)
+## 历史快照
 
-> Wayback Machine 在爬取网页时由于种种原因，可能导致网页保存不完整，这里记录的是可以看到完整 banner 的网页链接
+鉴于 B 站 Banner 的时效性，若需回溯已下线的往期 Banner，只想到通过 [Wayback Machine](https://web.archive.org/) 获取历史快照。以下整理了部分保存完整、可供抓取的历史快照链接
+
+由于 Wayback Machine 网站的采集机制限制，快照质量参差不齐。此处仅收录经测试可还原完整 Banner 交互的数据源
 
 - [2020-10-01](https://web.archive.org/web/20201010160645/https://www.bilibili.com/)
 - [2021-02-17](https://web.archive.org/web/20210217142039/https://www.bilibili.com/)
