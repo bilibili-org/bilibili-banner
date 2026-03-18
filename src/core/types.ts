@@ -11,11 +11,6 @@ interface BaseLayer {
   ySpeed?: number;
   scaleSpeed?: number;
   rotateSpeed?: number;
-
-  // 内部辅助数据
-  _baseTransform?: string; // 预处理后的基础矩阵字符串
-  _xSpeedCompensated?: number;
-  _ySpeedCompensated?: number;
 }
 
 interface ImageLayer extends BaseLayer {
@@ -57,12 +52,13 @@ export interface BannerManifestEntry {
   configs: ManifestConfig[];
 }
 
+export type BannerState = "loading" | "success" | "failed";
+
 export interface BannerDetail {
   name: string;
   path: string;
   layers: Layers;
-  /** 加载失败标记，true 时 layers 为空占位，不应触发渲染 */
-  failed?: boolean;
+  state: BannerState;
 }
 
 export interface DailyBannerDetail {

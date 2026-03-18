@@ -122,8 +122,8 @@ export default class BannerTimeLine {
     activeVariantIndex: number = 0,
   ): HTMLDivElement {
     const itemEl = document.createElement("div");
-    const activeVariantFailed = item.banners[activeVariantIndex]?.failed;
-    itemEl.className = `timeline-item ${isActive ? "active" : ""} ${activeVariantFailed ? "load-failed" : ""}`;
+    const activeVariantState = item.banners[activeVariantIndex]?.state;
+    itemEl.className = `timeline-item ${isActive ? "active" : ""} ${activeVariantState === "failed" ? "load-failed" : ""}`;
 
     const content = document.createElement("div");
     content.className = "item-content";
@@ -166,7 +166,7 @@ export default class BannerTimeLine {
 
       item.banners.forEach((variant: BannerDetail, index: number) => {
         const btn = document.createElement("div");
-        btn.className = `variant-item ${index === activeVariantIndex && isActive ? "active" : ""} ${variant.failed ? "load-failed" : ""}`;
+        btn.className = `variant-item ${index === activeVariantIndex && isActive ? "active" : ""} ${variant.state === "failed" ? "load-failed" : ""}`;
         btn.innerText = variant.name;
 
         btn.addEventListener("click", (e: MouseEvent) => {

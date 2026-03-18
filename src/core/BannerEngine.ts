@@ -13,18 +13,23 @@ interface EngineState {
   rafId: number;
 }
 
-interface EngineConfig {
-  duration: number;
-  baseWidth: number;
-}
+type MotionLayerExtra = MotionLayer & {
+  _baseTransform?: string;
+  _xSpeedCompensated?: number;
+  _ySpeedCompensated?: number;
+};
 
 export default class BannerEngine {
-  private container: HTMLElement | null;
-  private allLayersData: MotionLayer[] = [];
-  private layers: NodeListOf<HTMLElement> | null = null;
-  private compensate: number = 1;
-  private simpleVideoMode: boolean = false;
   private static readonly DEG2RAD: number = 180 / Math.PI;
+  private static readonly DEFAULT_ANIMATION_DURATION: number = 300;
+  private static readonly DEFAULT_SCREEN_WIDTH: number = 1650;
+
+  private root: HTMLElement | null;
+  private bannerContainer: HTMLElement | null;
+  private layersExtra: MotionLayerExtra[] = [];
+  private layers: NodeListOf<HTMLElement> | null = null;
+  private viewCompensation: number = 1;
+  private simpleVideoMode: boolean = false;
 
   private _particleSystem: ParticleSystem | null = null;
   private _particleCanvas: HTMLCanvasElement | null = null;
@@ -36,22 +41,15 @@ export default class BannerEngine {
     rafId: 0,
   };
 
-  private config: EngineConfig = {
-    duration: 300,
-    baseWidth: 1650,
-  };
-
   private _boundMouseEnter: (e: MouseEvent) => void;
   private _boundMouseMove: (e: MouseEvent) => void;
   private _boundMouseLeave: () => void;
   private _boundResize: () => void;
   private _boundBlur: () => void;
 
-  /**
-   * @param {string} containerSelector - Banner 容器的 CSS 选择器
-   */
-  constructor(containerSelector: string) {
-    this.container = document.querySelector(containerSelector);
+  constructor() {
+    this.root = document.querySelector("#app");
+    this.bannerContainer = this.root?.querySelector(".animated-banner") || null;
 
     this._boundMouseEnter = this._handleMouseEnter.bind(this);
     this._boundMouseMove = this._handleMouseMove.bind(this);
@@ -61,14 +59,11 @@ export default class BannerEngine {
     this._resetPosition = this._resetPosition.bind(this);
   }
 
-  /**
-   * 启动引擎：绑定全局事件
-   */
   public start(): void {
-    if (!this.container) return;
-    this.container.addEventListener("mouseenter", this._boundMouseEnter);
-    this.container.addEventListener("mousemove", this._boundMouseMove);
-    this.container.addEventListener("mouseleave", this._boundMouseLeave);
+    if (!this.bannerContainer) return;
+    this.bannerContainer.addEventListener("mouseenter", this._boundMouseEnter);
+    this.bannerContainer.addEventListener("mousemove", this._boundMouseMove);
+    this.bannerContainer.addEventListener("mouseleave", this._boundMouseLeave);
     window.addEventListener("resize", this._boundResize);
     window.addEventListener("blur", this._boundBlur);
   }
@@ -80,50 +75,30 @@ export default class BannerEngine {
     }
   }
 
-  private _calcCompensate(): void {
-    this.compensate =
-      window.innerWidth > this.config.baseWidth
-        ? window.innerWidth / this.config.baseWidth
+  private _updateViewCompensation(): void {
+    this.viewCompensation =
+      window.innerWidth > BannerEngine.DEFAULT_SCREEN_WIDTH
+        ? window.innerWidth / BannerEngine.DEFAULT_SCREEN_WIDTH
         : 1;
   }
 
   private _destroyVideos(): void {
-    if (this.container) {
-      const videos = this.container.querySelectorAll("video");
+    if (this.bannerContainer) {
+      const videos = this.bannerContainer.querySelectorAll("video");
       videos.forEach((video) => {
         video.pause();
         video.removeAttribute("src");
       });
     }
   }
-
-  /**
-   * 安全销毁：清空DOM，注销事件，取消动画帧，解决内存泄漏
-   */
-  public destroy(): void {
-    this._stopAnimation();
-    this._destroyVideos();
-    this._particleSystem?.dispose();
-    this._particleSystem = null;
-    this._particleCanvas = null;
-    if (this.container) {
-      this.container.removeEventListener("mouseenter", this._boundMouseEnter);
-      this.container.removeEventListener("mousemove", this._boundMouseMove);
-      this.container.removeEventListener("mouseleave", this._boundMouseLeave);
-      this.container.innerHTML = "";
-    }
-    window.removeEventListener("resize", this._boundResize);
-    window.removeEventListener("blur", this._boundBlur);
-
-    this.allLayersData = [];
-    this.layers = null;
+  public setViewState(state: "loading" | "success" | "failed"): void {
+    if (!this.root) return;
+    this.root.classList.remove("is-loading", "is-success", "is-failed");
+    this.root.classList.add(`is-${state}`);
   }
 
-  /**
-   * 更新数据源并重新渲染 (防腐层 + 策略路由)
-   * @param {Layers} dto - 必须接受格式化后的标准数据
-   */
   public updateData(dto: Layers): void {
+    this.setViewState("success");
     this._stopAnimation();
     this._destroyVideos();
     this._particleSystem?.dispose();
@@ -141,13 +116,13 @@ export default class BannerEngine {
 
     if (simpleVideoItem) {
       this.simpleVideoMode = true;
-      this.allLayersData = [];
+      this.layersExtra = [];
       this._renderSimpleVideo(simpleVideoItem.src);
       return;
     }
 
     this.simpleVideoMode = false;
-    this._calcCompensate();
+    this._updateViewCompensation();
 
     const motionLayers = rawPayload.filter(
       (item): item is MotionLayer =>
@@ -160,16 +135,13 @@ export default class BannerEngine {
     this._initParallaxData(motionLayers);
     this._renderParallax();
 
-    if (particleConfig && this.container && this._particleCanvas) {
+    if (particleConfig && this.bannerContainer && this._particleCanvas) {
       const ps = new ParticleSystem(this._particleCanvas, particleConfig);
       this._particleSystem = ps;
       ps.start();
     }
   }
 
-  /**
-   * 显示加载失败占位界面
-   */
   public showLoadFailed(): void {
     this._stopAnimation();
     this._destroyVideos();
@@ -177,17 +149,9 @@ export default class BannerEngine {
     this._particleSystem = null;
     this._particleCanvas = null;
     this.layers = null;
-    this.allLayersData = [];
+    this.layersExtra = [];
 
-    if (!this.container) return;
-    this.container.innerHTML = `
-      <div class="load-failed-banner">
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        <p class="load-failed-title">Load Failed</p>
-      </div>
-    `;
+    this.setViewState("failed");
   }
 
   // ─────────────────────── 微观构建工厂 (DOM Factory) ───────────────────────
@@ -211,7 +175,7 @@ export default class BannerEngine {
   }
 
   private _initParallaxData(layers: MotionLayer[]): void {
-    this.allLayersData = layers
+    this.layersExtra = layers
       // opacity 三值全为 0 → 该层永久不可见，无需渲染
       .filter((item) => {
         const op = item.opacity;
@@ -219,8 +183,8 @@ export default class BannerEngine {
       })
       .map((item) => {
         const baseTransform = [...item.transform];
-        baseTransform[4] *= this.compensate;
-        baseTransform[5] *= this.compensate;
+        baseTransform[4] *= this.viewCompensation;
+        baseTransform[5] *= this.viewCompensation;
 
         // 预先组装最内层的基础矩阵变换字符串备用
         const _baseTransform = `matrix(${baseTransform[0]}, ${baseTransform[1]}, ${baseTransform[2]}, ${baseTransform[3]}, ${baseTransform[4]}, ${baseTransform[5]})`;
@@ -240,11 +204,8 @@ export default class BannerEngine {
       });
   }
 
-  /**
-   * 单视频模式渲染管线
-   */
   private _renderSimpleVideo(src: string): void {
-    if (!this.container) return;
+    if (!this.bannerContainer) return;
     const wrapper = document.createElement("div");
     wrapper.className = "simple-video-container";
 
@@ -256,26 +217,23 @@ export default class BannerEngine {
     video.playsInline = true;
 
     wrapper.appendChild(video);
-    if (this.container) {
-      this.container.innerHTML = "";
-      this.container.appendChild(wrapper);
+    if (this.bannerContainer) {
+      this.bannerContainer.innerHTML = "";
+      this.bannerContainer.appendChild(wrapper);
     }
   }
 
-  /**
-   * 多图层视差渲染管线
-   */
   private _renderParallax(): void {
-    if (!this.container) return;
+    if (!this.bannerContainer) return;
 
     // 窗口尺寸变化时的快速更新
     if (this.layers && this.layers.length > 0) {
       for (let i = 0; i < this.layers.length; i++) {
-        const item = this.allLayersData[i];
+        const item = this.layersExtra[i];
         const child = this.layers[i].firstElementChild as HTMLElement;
         if (child) {
-          child.style.width = `${item.width * this.compensate}px`;
-          child.style.height = `${item.height * this.compensate}px`;
+          child.style.width = `${item.width * this.viewCompensation}px`;
+          child.style.height = `${item.height * this.viewCompensation}px`;
         }
         if (item._baseTransform) {
           this.layers[i].style.transform = item._baseTransform;
@@ -286,8 +244,8 @@ export default class BannerEngine {
 
     // 首次渲染
     const fragment = document.createDocumentFragment();
-    for (let i = 0; i < this.allLayersData.length; i++) {
-      const item = this.allLayersData[i];
+    for (let i = 0; i < this.layersExtra.length; i++) {
+      const item = this.layersExtra[i];
       const layer = document.createElement("div");
       layer.className = "layer";
       if (item._baseTransform) {
@@ -301,24 +259,24 @@ export default class BannerEngine {
         const initialBlur = Array.isArray(item.blur) ? item.blur[0] : item.blur;
         child.style.filter = `blur(${initialBlur}px)`;
       }
-      child.style.width = `${item.width * this.compensate}px`;
-      child.style.height = `${item.height * this.compensate}px`;
+      child.style.width = `${item.width * this.viewCompensation}px`;
+      child.style.height = `${item.height * this.viewCompensation}px`;
 
       layer.appendChild(child);
       fragment.appendChild(layer);
     }
 
-    if (this.container) {
-      this.container.innerHTML = "";
-      this.container.appendChild(fragment);
-      this.layers = this.container.querySelectorAll(".layer");
+    if (this.bannerContainer) {
+      this.bannerContainer.innerHTML = "";
+      this.bannerContainer.appendChild(fragment);
+      this.layers = this.bannerContainer.querySelectorAll(".layer");
 
       // 创建粒子画布（浮层，不干扰鼠标交互）
       const canvas = document.createElement("canvas");
-      canvas.width = this.container.clientWidth;
-      canvas.height = this.container.clientHeight;
+      canvas.width = this.bannerContainer.clientWidth;
+      canvas.height = this.bannerContainer.clientHeight;
       canvas.className = "particle-canvas";
-      this.container.appendChild(canvas);
+      this.bannerContainer.appendChild(canvas);
       this._particleCanvas = canvas;
     }
   }
@@ -341,7 +299,7 @@ export default class BannerEngine {
 
     for (let i = 0; i < this.layers.length; i++) {
       const layer = this.layers[i];
-      const item = this.allLayersData[i];
+      const item = this.layersExtra[i];
 
       const a = item._xSpeedCompensated || 0;
 
@@ -439,13 +397,13 @@ export default class BannerEngine {
 
   private _handleResize(): void {
     if (this.simpleVideoMode) return;
-    this._calcCompensate();
-    this._initParallaxData(this.allLayersData);
+    this._updateViewCompensation();
+    this._initParallaxData(this.layersExtra);
     this._renderParallax();
-    if (this.container && this._particleCanvas) {
+    if (this.bannerContainer && this._particleCanvas) {
       this._particleSystem?.resize(
-        this.container.clientWidth,
-        this.container.clientHeight,
+        this.bannerContainer.clientWidth,
+        this.bannerContainer.clientHeight,
       );
     }
   }
@@ -457,7 +415,10 @@ export default class BannerEngine {
   private _resetPosition(timestamp: DOMHighResTimeStamp): void {
     if (!this.state.startTime) this.state.startTime = timestamp;
     const elapsed = timestamp - this.state.startTime;
-    const progress = Math.min(elapsed / this.config.duration, 1);
+    const progress = Math.min(
+      elapsed / BannerEngine.DEFAULT_ANIMATION_DURATION,
+      1,
+    );
     const easeProgress = this._easeOutQuart(progress);
 
     this._animate(easeProgress);

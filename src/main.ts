@@ -5,39 +5,35 @@ import type { BannerDetail } from "./core/types";
 import BannerTimeLine from "./ui/BannerTimeLine";
 import YearSelector from "./ui/YearSelector";
 
-const engine = new BannerEngine("#app");
+const engine = new BannerEngine();
 
 const PERSIST_KEY = "last_banner_path";
 
 engine.start();
 
 async function updateBanner(bannerDetail: BannerDetail) {
-  // 1. 如果已知加载失败，直接显示错误 UI
-  if (bannerDetail.failed) {
-    engine.showLoadFailed();
-    localStorage.setItem(PERSIST_KEY, bannerDetail.path);
-    return;
+  switch (bannerDetail.state) {
+    case "success":
+      engine.updateData(bannerDetail.layers);
+      break;
+    case "failed":
+      engine.showLoadFailed();
+      break;
+    case "loading":
+      try {
+        engine.setViewState("loading");
+        const layers = await fetchLayers(bannerDetail.path);
+        bannerDetail.layers = layers;
+        bannerDetail.state = "success";
+        engine.updateData(layers);
+      } catch (e) {
+        console.error(`[Main] 无法加载 Banner 数据: ${bannerDetail.path}`, e);
+        bannerDetail.state = "failed";
+        engine.showLoadFailed();
+      }
+      break;
   }
-
-  // 2. 如果数据已持有（layers 数组不为空），由数据对象自缓存，直接渲染
-  if (bannerDetail.layers.length > 0) {
-    engine.updateData(bannerDetail.layers);
-    localStorage.setItem(PERSIST_KEY, bannerDetail.path);
-    return;
-  }
-
-  // 3. 第一次切换到该 Banner，执行异步请求
-  try {
-    const layers = await fetchLayers(bannerDetail.path);
-    bannerDetail.layers = layers;
-    engine.updateData(layers);
-    localStorage.setItem(PERSIST_KEY, bannerDetail.path);
-  } catch (e) {
-    console.error(`[Main] 无法加载 Banner 数据: ${bannerDetail.path}`, e);
-    bannerDetail.failed = true;
-    engine.showLoadFailed();
-    localStorage.setItem(PERSIST_KEY, bannerDetail.path);
-  }
+  localStorage.setItem(PERSIST_KEY, bannerDetail.path);
 }
 
 loadBannerManifest()

@@ -9,34 +9,28 @@ import type {
   SimpleVideoLayer,
 } from "./types";
 
-export const BANNER_MANIFEST = BANNER_MANIFEST_JSON as BannerManifestEntry[];
-
 function parseLayerData(rawData: unknown): Layers {
   if (!Array.isArray(rawData)) {
     throw new Error("[BannerDataLoader] 数据格式错误: 期望数组类型层配置");
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: rawData 来源为 JSON，item 类型由内部 switch 逻辑根据 type 字段动态收窄
-  const layers = rawData.reduce((acc: Layers, item: any) => {
-    const { type } = item;
-
-    switch (type) {
+  const layers: Layers = [];
+  for (const item of rawData) {
+    switch (item.type) {
       case "particle":
-        acc.push(item as ParticleLayer);
+        layers.push(item as ParticleLayer);
         break;
       case "simple-video":
-        acc.push(item as SimpleVideoLayer);
+        layers.push(item as SimpleVideoLayer);
         break;
       case "video":
       case "img":
-        acc.push(item as MotionLayer);
+        layers.push(item as MotionLayer);
         break;
       default:
-        throw new Error(`[BannerDataLoader] 未知类型数据: ${type}`);
+        throw new Error(`[BannerDataLoader] 未知类型数据: ${item.type}`);
     }
-
-    return acc;
-  }, []);
+  }
 
   if (layers.length === 0) {
     throw new Error(
@@ -51,11 +45,14 @@ function parseLayerData(rawData: unknown): Layers {
  * 仅加载 Banner 元数据列表（不包含具体的图层数据）
  */
 export async function loadBannerManifest(): Promise<DailyBannerDetail[]> {
-  return BANNER_MANIFEST.map((entry) => {
+  const bannerManifest = BANNER_MANIFEST_JSON as BannerManifestEntry[];
+
+  return bannerManifest.map((entry) => {
     const banners: BannerDetail[] = entry.configs.map((v) => ({
       name: v.name,
       path: v.path || entry.date,
       layers: [], // 初始为空，按需加载
+      state: "loading",
     }));
 
     return {

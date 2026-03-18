@@ -30,13 +30,80 @@ video {
 }
 
 #app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f6f7f8;
+}
+
+/* Banner 容器（顶部固定高度） */
+.banner-container {
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
   width: 100%;
   height: 160px;
   background-color: #fff;
-  contain: paint layout; /* Micro-service isolation for rendering */
+  contain: paint layout;
+}
+
+/* 动画渲染层（原 #app 逻辑） */
+.animated-banner {
+  width: 100%;
+  height: 100%;
+}
+
+/* 状态受控显示逻辑 */
+.loading-banner,
+.animated-banner,
+.failed-banner {
+  display: none;
+  width: 100%;
+  height: 100%;
+}
+
+#app.is-loading .loading-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+#app.is-success .animated-banner {
+  display: block;
+}
+#app.is-failed .failed-banner {
+  display: flex;
+}
+
+/* 加载中动画 */
+.loading-banner {
+  background: #fff;
+  color: #999;
+  gap: 12px;
+}
+.loading-spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 交互控制区 */
+.control-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
 }
 
 .layer {
@@ -290,20 +357,19 @@ video {
 }
 
 /* 加载失败占位界面 */
-.load-failed-banner {
+.failed-banner {
   position: absolute;
   inset: 0;
-  display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 10px;
   color: #c0392b;
   background: #fff8f8;
   user-select: none;
 }
 
-.load-failed-banner svg {
+.failed-banner svg {
   opacity: 0.7;
 }
 
