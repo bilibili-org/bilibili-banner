@@ -63,9 +63,6 @@ export default class ParticleSystem {
     this.images = [];
   }
 
-  /**
-   * 同步 canvas 尺寸到容器宽高（resize 时由引擎调用）
-   */
   public resize(width: number, height: number): void {
     this.canvas.width = width;
     this.canvas.height = height;

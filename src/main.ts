@@ -1,6 +1,6 @@
 import "./styles/index.css";
-import { fetchLayers, loadBannerManifest } from "./core/BannerDataLoader";
 import BannerEngine from "./core/BannerEngine";
+import { fetchLayers, loadBannerManifest } from "./core/DataLoader";
 import type { BannerDetail } from "./core/types";
 import BannerTimeLine from "./ui/BannerTimeLine";
 import YearSelector from "./ui/YearSelector";
@@ -9,31 +9,31 @@ const engine = new BannerEngine();
 
 const PERSIST_KEY = "last_banner_path";
 
-engine.start();
+let currentActivePath = "";
 
 async function updateBanner(bannerDetail: BannerDetail) {
-  switch (bannerDetail.state) {
-    case "success":
-      engine.updateData(bannerDetail.layers);
-      break;
-    case "failed":
-      engine.showLoadFailed();
-      break;
-    case "loading":
-      try {
-        engine.setViewState("loading");
-        const layers = await fetchLayers(bannerDetail.path);
-        bannerDetail.layers = layers;
-        bannerDetail.state = "success";
-        engine.updateData(layers);
-      } catch (e) {
-        console.error(`[Main] 无法加载 Banner 数据: ${bannerDetail.path}`, e);
-        bannerDetail.state = "failed";
-        engine.showLoadFailed();
-      }
-      break;
+  if (currentActivePath === bannerDetail.path) {
+    return;
   }
-  localStorage.setItem(PERSIST_KEY, bannerDetail.path);
+
+  currentActivePath = bannerDetail.path;
+  engine.render(bannerDetail);
+
+  if (bannerDetail.state === "loading") {
+    try {
+      const layers = await fetchLayers(bannerDetail.path);
+      bannerDetail.layers = layers;
+      bannerDetail.state = "success";
+    } catch (e) {
+      console.error(`[Main] 无法加载 Banner 数据: ${bannerDetail.path}`, e);
+      bannerDetail.state = "failed";
+    }
+  }
+
+  if (currentActivePath === bannerDetail.path) {
+    engine.render(bannerDetail);
+    localStorage.setItem(PERSIST_KEY, bannerDetail.path);
+  }
 }
 
 loadBannerManifest()
