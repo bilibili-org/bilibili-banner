@@ -1,15 +1,15 @@
 import BANNER_MANIFEST_JSON from "../data/banner.json";
 import type {
-  Banner,
-  BannerManifest,
-  DailyBanner,
+  BannerDetail,
+  BannerManifestEntry,
+  DailyBannerDetail,
   Layers,
   MotionLayer,
   ParticleLayer,
   SimpleVideoLayer,
 } from "./types";
 
-export const BANNER_MANIFEST = BANNER_MANIFEST_JSON as BannerManifest[];
+export const BANNER_MANIFEST = BANNER_MANIFEST_JSON as BannerManifestEntry[];
 
 function parseLayerData(rawData: unknown): Layers {
   if (!Array.isArray(rawData)) {
@@ -47,47 +47,27 @@ function parseLayerData(rawData: unknown): Layers {
   return layers;
 }
 
-export async function loadBanners(): Promise<DailyBanner[]> {
-  const tasks = BANNER_MANIFEST.map(async (entry) => {
-    const innerLoadTasks = entry.configs.map(async (v) => {
-      const fetchPath = v.path || entry.date;
-      const url = `${import.meta.env.BASE_URL}assets/${fetchPath}/data.json`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const rawData = await res.json();
-      return {
-        name: v.name,
-        path: fetchPath,
-        layers: parseLayerData(rawData),
-      } as Banner;
-    });
-
-    const results = await Promise.allSettled(innerLoadTasks);
-
-    const banners: Banner[] = results.map((result, idx) => {
-      if (result.status === "fulfilled") {
-        return result.value;
-      }
-
-      const fetchPath = entry.configs[idx].path || entry.date;
-      const url = `${import.meta.env.BASE_URL}assets/${fetchPath}/data.json`;
-      console.error(
-        `[BannerDataLoader] 配置文件加载失败：${url}`,
-        result.reason,
-      );
-      return {
-        name: entry.configs[idx].name,
-        path: fetchPath,
-        layers: [],
-        failed: true,
-      } as Banner;
-    });
+/**
+ * 仅加载 Banner 元数据列表（不包含具体的图层数据）
+ */
+export async function loadBannerManifest(): Promise<DailyBannerDetail[]> {
+  return BANNER_MANIFEST.map((entry) => {
+    const banners: BannerDetail[] = entry.configs.map((v) => ({
+      name: v.name,
+      path: v.path || entry.date,
+      layers: [], // 初始为空，按需加载
+    }));
 
     return {
       date: entry.date,
       banners: banners,
-    } as DailyBanner;
+    };
   });
+}
 
-  return Promise.all(tasks);
+export async function fetchLayers(path: string): Promise<Layers> {
+  const url = `${import.meta.env.BASE_URL}assets/${path}/data.json`;
+  const res = await fetch(url);
+  const rawData = await res.json();
+  return parseLayerData(rawData);
 }

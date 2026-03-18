@@ -169,9 +169,8 @@ export default class BannerEngine {
 
   /**
    * 显示加载失败占位界面
-   * @param {string} path - 加载失败的配置文件路径，用于提示信息
    */
-  public showLoadFailed(path: string): void {
+  public showLoadFailed(): void {
     this._stopAnimation();
     this._destroyVideos();
     this._particleSystem?.dispose();
@@ -187,7 +186,6 @@ export default class BannerEngine {
           <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
         <p class="load-failed-title">Load Failed</p>
-        <p class="load-failed-path">${path}/data.json</p>
       </div>
     `;
   }

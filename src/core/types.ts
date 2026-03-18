@@ -52,12 +52,12 @@ interface ManifestConfig {
   path?: string;
 }
 
-export interface BannerManifest {
+export interface BannerManifestEntry {
   date: string;
   configs: ManifestConfig[];
 }
 
-export interface Banner {
+export interface BannerDetail {
   name: string;
   path: string;
   layers: Layers;
@@ -65,7 +65,7 @@ export interface Banner {
   failed?: boolean;
 }
 
-export interface DailyBanner {
+export interface DailyBannerDetail {
   date: string;
-  banners: Banner[];
+  banners: BannerDetail[];
 }

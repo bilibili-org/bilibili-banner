@@ -1,15 +1,15 @@
-import type { Banner, DailyBanner } from "../core/types";
+import type { BannerDetail, DailyBannerDetail } from "../core/types";
 
 export interface BannerTimeLineOptions {
   containerId?: string;
-  onVariantSelect?: (variant: Banner) => void;
+  onVariantSelect?: (variant: BannerDetail) => void;
 }
 
 export default class BannerTimeLine {
   private container: HTMLElement | null;
   private _bodyDropdowns: HTMLDivElement[] = [];
-  private onVariantSelect?: (variant: Banner) => void;
-  private _itemDataMap: WeakMap<HTMLElement, DailyBanner> = new WeakMap();
+  private onVariantSelect?: (variant: BannerDetail) => void;
+  private _itemDataMap: WeakMap<HTMLElement, DailyBannerDetail> = new WeakMap();
   private _activeDropdownTimer?: number;
 
   private _boundHandleClick: (e: MouseEvent) => void;
@@ -53,7 +53,7 @@ export default class BannerTimeLine {
    * @param {LoadedBannerData[]} filteredData
    * @param {string} [targetPath] - 期望初始选中的变体路径
    */
-  public render(filteredData: DailyBanner[], targetPath?: string): void {
+  public render(filteredData: DailyBannerDetail[], targetPath?: string): void {
     if (!this.container) return;
 
     this._cleanupDropdowns();
@@ -117,7 +117,7 @@ export default class BannerTimeLine {
   private _hideDropdownScheduledBound = () => this._hideDropdownScheduled();
 
   private _createTimelineItem(
-    item: DailyBanner,
+    item: DailyBannerDetail,
     isActive: boolean,
     activeVariantIndex: number = 0,
   ): HTMLDivElement {
@@ -164,16 +164,13 @@ export default class BannerTimeLine {
       dropdown.id = dropdownId;
       dropdown.className = "variant-dropdown";
 
-      item.banners.forEach((variant: Banner, index: number) => {
+      item.banners.forEach((variant: BannerDetail, index: number) => {
         const btn = document.createElement("div");
         btn.className = `variant-item ${index === activeVariantIndex && isActive ? "active" : ""} ${variant.failed ? "load-failed" : ""}`;
         btn.innerText = variant.name;
 
         btn.addEventListener("click", (e: MouseEvent) => {
           e.stopPropagation();
-
-          // 失败的变体不触发渲染
-          if (variant.failed) return;
 
           if (this.container) {
             this.container.querySelectorAll(".timeline-item").forEach((el) => {
@@ -225,8 +222,6 @@ export default class BannerTimeLine {
     if (!itemData) return;
 
     const firstVariant = itemData.banners[0];
-    // 失败的单变体条目不触发渲染
-    if (firstVariant.failed) return;
 
     if (this.container) {
       this.container.querySelectorAll(".timeline-item").forEach((el) => {
