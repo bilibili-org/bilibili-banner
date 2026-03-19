@@ -1,148 +1,151 @@
-[
-  {
-    "type": "img",
-    "src": "./assets/2021-04-12/c12c6ceaa5f78de17cd94bb0ad325339b2386ee8.png",
-    "width": 4833,
-    "height": 180,
-    "transform": [1, 0, 0, 1, 0, -15],
-    "xSpeed": -0.0606061,
-    "opacity": [1, 1, 1]
-  },
-  {
-    "type": "img",
-    "src": "./assets/2021-04-12/4d5ddb371f6d710cf0222a5d0cef46ea3ed5901c.png",
-    "width": 4833,
-    "height": 180,
-    "transform": [1, 0, 0, 1, 1100, 0],
-    "xSpeed": -0.06061,
-    "opacity": [1, 1, 1]
-  },
-  {
-    "type": "img",
-    "src": "./assets/2021-04-12/c7a1dbf9bbc09c1f867b14a141c4e2f07c4b228d.png",
-    "width": 1585,
-    "height": 162,
-    "transform": [1, 0, 0, 1, 675, 0],
-    "xSpeed": -0.081818,
-    "opacity": [1, 1, 1]
-  },
-  {
-    "type": "img",
-    "src": "./assets/2021-04-12/d605a7076d5fe89d0d7e3d6219bffe4000033a09.png",
-    "width": 1439,
-    "height": 176,
-    "transform": [1, 0, 0, 1, -637, 0],
-    "xSpeed": -0.267273,
-    "opacity": [1, 1, 1]
-  },
-  {
-    "type": "img",
-    "src": "./assets/2021-04-12/8d947f22c6a67b8a5d2fbe1424ca2a946802e729.png",
-    "width": 250,
-    "height": 62,
-    "transform": [1, 0, 0, 1, 607.5, 45],
-    "xSpeed": -0.068182,
-    "opacity": [1, 1, 1]
-  },
-  {
-    "type": "img",
-    "src": "./assets/2021-04-12/65a860abda015ed247d48b1bcc5cbb9ce725d050.png",
-    "width": 205,
-    "height": 84,
-    "transform": [1, 0, 0, 1, 252, 36.4],
-    "xSpeed": -0.033939,
-    "opacity": [0, 0, 1]
-  },
-  {
-    "type": "img",
-    "src": "./assets/2021-04-12/963685e7d82d27ba5e8187680814a2d548b5adbe.png",
-    "width": 1229,
-    "height": 125,
-    "transform": [1, 0, 0, 1, 112, 14],
-    "xSpeed": -0.424242,
-    "opacity": [1, 1, 1]
-  },
-  {
-    "type": "img",
-    "src": "./assets/2021-04-12/6a6e6e52a18a7731645aa1d93b1d74f2f628f77a.png",
-    "width": 1229,
-    "height": 81,
-    "transform": [1, 0, 0, 1, -350, 49],
-    "xSpeed": -0.509091,
-    "opacity": [1, 1, 1]
-  },
-  {
-    "type": "img",
-    "src": "./assets/2021-04-12/3969636231e7668ec91985bb147c89a6b69021c7.png",
-    "width": 198,
-    "height": 138,
-    "transform": [1, 0, 0, 1, -240, 16],
-    "xSpeed": -0.24242412,
-    "opacity": [0, 1, 0]
-  },
-  {
-    "type": "img",
-    "src": "./assets/2021-04-12/9af4cdc3c81e01522fc4df82a5b7cfa8b03b6b5b.png",
-    "width": 58,
-    "height": 102,
-    "transform": [1, 0, 0, 1, -340, 32],
-    "xSpeed": -0.3515151,
-    "opacity": [0, 1, 0]
-  },
-  {
-    "type": "img",
-    "src": "./assets/2021-04-12/4d8514308bd6673b215cdb1aadbf12891d784672.png",
-    "width": 270,
-    "height": 114,
-    "transform": [1, 0, 0, 1, -90, 13.5],
-    "xSpeed": -0.681818,
-    "opacity": [1, 1, 1]
-  },
-  {
-    "type": "img",
-    "src": "./assets/2021-04-12/9b4f18f9f18c8dca17ba6c0b46a1dcedb649c82b.png",
-    "width": 2138,
-    "height": 180,
-    "transform": [1, 0, 0, 1, 100, 0],
-    "xSpeed": -0.9090905,
-    "opacity": [1, 1, 1]
-  },
-  {
-    "type": "img",
-    "src": "./assets/2021-04-12/b24c872ae1ef34ebe794d1631a50b57fbdb0a482.png",
-    "width": 419,
-    "height": 147,
-    "transform": [1, 0, 0, 1, 216, 13.5],
-    "xSpeed": -0.9,
-    "opacity": [1, 0, 0]
-  },
-  {
-    "type": "img",
-    "src": "./assets/2021-04-12/45031fa60ea6084886e80ca9e906803f9a3221b1.png",
-    "width": 444,
-    "height": 211,
-    "transform": [1, 0, 0, 1, 2100, 0],
-    "xSpeed": -1.2727285,
-    "blur": 2,
-    "opacity": [1, 1, 1]
-  },
-  {
-    "type": "img",
-    "src": "./assets/2021-04-12/17a00335345ecb9f5439069ee2d069772a9cede3.png",
-    "width": 958,
-    "height": 180,
-    "transform": [1, 0, 0, 1, -1000, 0],
-    "xSpeed": -1.818181,
-    "blur": 1,
-    "opacity": [1, 1, 1]
-  },
-  {
-    "type": "particle",
-    "srcs": ["/assets/2021-04-12/f1.png", "/assets/2021-04-12/f2.png"],
-    "angleRange": [30, 45],
-    "count": 15,
-    "opacityRange": [0.6, 0.9],
-    "scaleRange": [0.03, 0.05],
-    "speedRange": [0.85, 1]
-  }
-]
+{
+  "type": "multi-layer",
+  "layers": [
+    {
+      "type": "img",
+      "src": "./assets/2021-04-12/c12c6ceaa5f78de17cd94bb0ad325339b2386ee8.png",
+      "width": 4833,
+      "height": 180,
+      "transform": [1, 0, 0, 1, 0, -15],
+      "xSpeed": -0.0606061,
+      "opacity": [1, 1, 1]
+    },
+    {
+      "type": "img",
+      "src": "./assets/2021-04-12/4d5ddb371f6d710cf0222a5d0cef46ea3ed5901c.png",
+      "width": 4833,
+      "height": 180,
+      "transform": [1, 0, 0, 1, 1100, 0],
+      "xSpeed": -0.06061,
+      "opacity": [1, 1, 1]
+    },
+    {
+      "type": "img",
+      "src": "./assets/2021-04-12/c7a1dbf9bbc09c1f867b14a141c4e2f07c4b228d.png",
+      "width": 1585,
+      "height": 162,
+      "transform": [1, 0, 0, 1, 675, 0],
+      "xSpeed": -0.081818,
+      "opacity": [1, 1, 1]
+    },
+    {
+      "type": "img",
+      "src": "./assets/2021-04-12/d605a7076d5fe89d0d7e3d6219bffe4000033a09.png",
+      "width": 1439,
+      "height": 176,
+      "transform": [1, 0, 0, 1, -637, 0],
+      "xSpeed": -0.267273,
+      "opacity": [1, 1, 1]
+    },
+    {
+      "type": "img",
+      "src": "./assets/2021-04-12/8d947f22c6a67b8a5d2fbe1424ca2a946802e729.png",
+      "width": 250,
+      "height": 62,
+      "transform": [1, 0, 0, 1, 607.5, 45],
+      "xSpeed": -0.068182,
+      "opacity": [1, 1, 1]
+    },
+    {
+      "type": "img",
+      "src": "./assets/2021-04-12/65a860abda015ed247d48b1bcc5cbb9ce725d050.png",
+      "width": 205,
+      "height": 84,
+      "transform": [1, 0, 0, 1, 252, 36.4],
+      "xSpeed": -0.033939,
+      "opacity": [0, 0, 1]
+    },
+    {
+      "type": "img",
+      "src": "./assets/2021-04-12/963685e7d82d27ba5e8187680814a2d548b5adbe.png",
+      "width": 1229,
+      "height": 125,
+      "transform": [1, 0, 0, 1, 112, 14],
+      "xSpeed": -0.424242,
+      "opacity": [1, 1, 1]
+    },
+    {
+      "type": "img",
+      "src": "./assets/2021-04-12/6a6e6e52a18a7731645aa1d93b1d74f2f628f77a.png",
+      "width": 1229,
+      "height": 81,
+      "transform": [1, 0, 0, 1, -350, 49],
+      "xSpeed": -0.509091,
+      "opacity": [1, 1, 1]
+    },
+    {
+      "type": "img",
+      "src": "./assets/2021-04-12/3969636231e7668ec91985bb147c89a6b69021c7.png",
+      "width": 198,
+      "height": 138,
+      "transform": [1, 0, 0, 1, -240, 16],
+      "xSpeed": -0.24242412,
+      "opacity": [0, 1, 0]
+    },
+    {
+      "type": "img",
+      "src": "./assets/2021-04-12/9af4cdc3c81e01522fc4df82a5b7cfa8b03b6b5b.png",
+      "width": 58,
+      "height": 102,
+      "transform": [1, 0, 0, 1, -340, 32],
+      "xSpeed": -0.3515151,
+      "opacity": [0, 1, 0]
+    },
+    {
+      "type": "img",
+      "src": "./assets/2021-04-12/4d8514308bd6673b215cdb1aadbf12891d784672.png",
+      "width": 270,
+      "height": 114,
+      "transform": [1, 0, 0, 1, -90, 13.5],
+      "xSpeed": -0.681818,
+      "opacity": [1, 1, 1]
+    },
+    {
+      "type": "img",
+      "src": "./assets/2021-04-12/9b4f18f9f18c8dca17ba6c0b46a1dcedb649c82b.png",
+      "width": 2138,
+      "height": 180,
+      "transform": [1, 0, 0, 1, 100, 0],
+      "xSpeed": -0.9090905,
+      "opacity": [1, 1, 1]
+    },
+    {
+      "type": "img",
+      "src": "./assets/2021-04-12/b24c872ae1ef34ebe794d1631a50b57fbdb0a482.png",
+      "width": 419,
+      "height": 147,
+      "transform": [1, 0, 0, 1, 216, 13.5],
+      "xSpeed": -0.9,
+      "opacity": [1, 0, 0]
+    },
+    {
+      "type": "img",
+      "src": "./assets/2021-04-12/45031fa60ea6084886e80ca9e906803f9a3221b1.png",
+      "width": 444,
+      "height": 211,
+      "transform": [1, 0, 0, 1, 2100, 0],
+      "xSpeed": -1.2727285,
+      "blur": 2,
+      "opacity": [1, 1, 1]
+    },
+    {
+      "type": "img",
+      "src": "./assets/2021-04-12/17a00335345ecb9f5439069ee2d069772a9cede3.png",
+      "width": 958,
+      "height": 180,
+      "transform": [1, 0, 0, 1, -1000, 0],
+      "xSpeed": -1.818181,
+      "blur": 1,
+      "opacity": [1, 1, 1]
+    },
+    {
+      "type": "particle",
+      "srcs": ["/assets/2021-04-12/f1.png", "/assets/2021-04-12/f2.png"],
+      "angleRange": [30, 45],
+      "count": 15,
+      "opacityRange": [0.6, 0.9],
+      "scaleRange": [0.03, 0.05],
+      "speedRange": [0.85, 1]
+    }
+  ]
+}

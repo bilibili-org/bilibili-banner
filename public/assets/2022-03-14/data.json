@@ -1,6 +1,9 @@
-[
-  {
-    "type": "single-video",
-    "src": "/assets/2022-03-14/2022-03-14.mp4"
-  }
-]
+{
+  "type": "single-video",
+  "layers": [
+    {
+      "type": "video",
+      "src": "/assets/2022-03-14/2022-03-14.mp4"
+    }
+  ]
+}

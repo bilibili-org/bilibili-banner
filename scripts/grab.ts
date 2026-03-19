@@ -3,7 +3,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
-import type { Layers, MotionLayer, BannerManifest } from "../src/core/types";
+import type {
+  Layers,
+  MediaLayer,
+  BannerManifestEntry,
+} from "../src/core/types";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -470,7 +474,7 @@ function dumpLayerMetadatas(
         `[Grabber] 发现未知图层类型: ${item.tagName}, 目前仅支持 img 和 video, 请新增处理逻辑`,
       );
     }
-    const layer: MotionLayer = {
+    const layer: MediaLayer = {
       type: item.tagName,
       src: item.src,
       width: item.width,
@@ -495,7 +499,7 @@ function updateBannerManifest(date: string): void {
   const configFilePath = path.resolve(__dirname, "../src/data/banner.json");
   const bannerName = date;
 
-  let banners: BannerManifest[] = [];
+  let banners: BannerManifestEntry[] = [];
   try {
     if (fs.existsSync(configFilePath)) {
       banners = JSON.parse(fs.readFileSync(configFilePath, "utf8"));

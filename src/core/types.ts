@@ -21,16 +21,6 @@ interface VideoLayer extends BaseLayer {
   type: "video";
 }
 
-export interface SingleVideoLayer {
-  type: "single-video";
-  src: string;
-}
-
-export interface SingleImageLayer {
-  type: "single-image";
-  src: string;
-}
-
 export interface ParticleLayer {
   type: "particle";
   srcs: string[];
@@ -41,11 +31,9 @@ export interface ParticleLayer {
   opacityRange: [number, number];
 }
 
-export type MotionLayer = ImageLayer | VideoLayer;
+export type MediaLayer = ImageLayer | VideoLayer;
 
-export type Layers = Array<
-  MotionLayer | SingleVideoLayer | SingleImageLayer | ParticleLayer
->;
+export type Layers = Array<MediaLayer | ParticleLayer>;
 
 // ─────────────────────── 数据加载器相关 ───────────────────────
 

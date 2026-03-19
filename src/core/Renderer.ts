@@ -1,11 +1,5 @@
 import ParticleSystem from "./ParticleSystem";
-import type {
-  BannerDetail,
-  MotionLayer,
-  ParticleLayer,
-  SingleImageLayer,
-  SingleVideoLayer,
-} from "./types";
+import type { BannerDetail, MediaLayer, ParticleLayer } from "./types";
 
 export interface BaseRenderer {
   render(container: HTMLElement, detail: BannerDetail): void;
@@ -34,7 +28,7 @@ export class SingleVideoRenderer implements BaseRenderer {
 
   public render(container: HTMLElement, detail: BannerDetail): void {
     const singleVideoItem = detail.layers.find(
-      (item): item is SingleVideoLayer => item.type === "single-video",
+      (item): item is MediaLayer => item.type === "video",
     );
     if (!singleVideoItem) return;
 
@@ -73,7 +67,7 @@ export class SingleImageRenderer implements BaseRenderer {
 
   public render(container: HTMLElement, detail: BannerDetail): void {
     const singleImageItem = detail.layers.find(
-      (item): item is SingleImageLayer => item.type === "single-image",
+      (item): item is MediaLayer => item.type === "img",
     );
     if (!singleImageItem) return;
 
@@ -108,7 +102,7 @@ interface ParallaxState {
   rafId: number;
 }
 
-type MotionLayerExtra = MotionLayer & {
+type MotionLayerExtra = MediaLayer & {
   _baseTransform?: string;
   _xSpeedCompensated?: number;
   _ySpeedCompensated?: number;
@@ -163,7 +157,7 @@ export class ParallaxRenderer implements BaseRenderer {
     this._updateViewCompensation();
 
     const motionLayers = detail.layers.filter(
-      (item): item is MotionLayer =>
+      (item): item is MediaLayer =>
         item.type === "img" || item.type === "video",
     );
     const particleConfig =
@@ -234,7 +228,7 @@ export class ParallaxRenderer implements BaseRenderer {
   }
 
   private _createLayerElement(
-    item: MotionLayer,
+    item: MediaLayer,
   ): HTMLImageElement | HTMLVideoElement {
     if (item.type === "video") {
       const child = document.createElement("video");
@@ -251,7 +245,7 @@ export class ParallaxRenderer implements BaseRenderer {
     }
   }
 
-  private _initParallaxData(layers: MotionLayer[]): void {
+  private _initParallaxData(layers: MediaLayer[]): void {
     this.layersExtra = layers
       .filter((item) => {
         const op = item.opacity;

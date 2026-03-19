@@ -1,10 +1,6 @@
 import "./styles/index.css";
 import BannerEngine from "./core/BannerEngine";
-import {
-  fetchLayerData,
-  loadBannerManifest,
-  parseLayerData,
-} from "./core/DataLoader";
+import { loadBannerManifest, parseBannerData } from "./core/DataLoader";
 import type { BannerDetail } from "./core/types";
 import BannerTimeLine from "./ui/BannerTimeLine";
 import YearSelector from "./ui/YearSelector";
@@ -25,10 +21,9 @@ async function updateBanner(bannerDetail: BannerDetail) {
 
   if (bannerDetail.state === "loading") {
     try {
-      const layersRawData = await fetchLayerData(bannerDetail.path);
-      bannerDetail.layers = parseLayerData(layersRawData);
-      updateBannerType(bannerDetail);
-
+      const { type, layers } = await parseBannerData(bannerDetail.path);
+      bannerDetail.type = type;
+      bannerDetail.layers = layers;
       bannerDetail.state = "success";
     } catch (e) {
       console.error(`[Main] 无法加载 Banner 数据: ${bannerDetail.path}`, e);
@@ -39,16 +34,6 @@ async function updateBanner(bannerDetail: BannerDetail) {
   if (currentActivePath === bannerDetail.path) {
     engine.render(bannerDetail);
     localStorage.setItem(PERSIST_KEY, bannerDetail.path);
-  }
-}
-
-function updateBannerType(bannerDetail: BannerDetail) {
-  if (bannerDetail.layers.some((l) => l.type === "single-image")) {
-    bannerDetail.type = "single-image";
-  } else if (bannerDetail.layers.some((l) => l.type === "single-video")) {
-    bannerDetail.type = "single-video";
-  } else {
-    bannerDetail.type = "multi-layer";
   }
 }
 

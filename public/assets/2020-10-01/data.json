@@ -1,6 +1,9 @@
-[
-  {
-    "type": "single-image",
-    "src": "/assets/2020-10-01/54fa1faa44f3624752af29bae81f714977793c72.png"
-  }
-]
+{
+  "type": "single-image",
+  "layers": [
+    {
+      "type": "img",
+      "src": "/assets/2020-10-01/54fa1faa44f3624752af29bae81f714977793c72.png"
+    }
+  ]
+}

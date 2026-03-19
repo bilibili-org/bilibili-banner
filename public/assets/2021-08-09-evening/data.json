@@ -1,6 +1,9 @@
-[
-  {
-    "type": "single-video",
-    "src": "/assets/2021-08-09-evening/1015a3e2-7027-484a-a92d-0695ea5dfc0c.mp4"
-  }
-]
+{
+  "type": "single-video",
+  "layers": [
+    {
+      "type": "video",
+      "src": "/assets/2021-08-09-evening/1015a3e2-7027-484a-a92d-0695ea5dfc0c.mp4"
+    }
+  ]
+}
