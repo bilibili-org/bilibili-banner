@@ -491,7 +491,17 @@ function dumpLayerMetadatas(
     return sortObjectKeys(layer);
   });
 
-  fs.writeFileSync(outputPath, JSON.stringify(finalLayers, null, 2));
+  fs.writeFileSync(
+    outputPath,
+    JSON.stringify(
+      {
+        type: "multi-layer",
+        layers: finalLayers,
+      },
+      null,
+      2,
+    ),
+  );
   console.log("已写入 data.json 配置文件");
 }
 
