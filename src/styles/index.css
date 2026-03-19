@@ -322,8 +322,9 @@ video {
   opacity: 1;
 }
 
-/* 单视频模式容器 - 旧版 banner（2021-2022）*/
-.simple-video-container {
+/* 单图/单视频 模式容器 */
+.single-video-container,
+.single-image-container {
   position: absolute;
   inset: 0;
   display: flex;
@@ -332,10 +333,11 @@ video {
   overflow: hidden; /* 宽度不足时截断，不缩小 */
 }
 
-.simple-video-container video {
-  flex-shrink: 0; /* 禁止视频缩小 */
+.single-video-container video,
+.single-image-container img {
+  flex-shrink: 0; /* 禁止缩小 */
   width: 100%; /* 撑满容器宽度 */
-  height: 160px; /* 固定高度与 #app 一致 */
+  height: 160px; /* 固定高度与容器一致 */
   object-fit: cover; /* 等比缩放铺满，超出部分由容器 overflow:hidden 截断 */
 }
 

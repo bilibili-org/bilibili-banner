@@ -1,9 +1,6 @@
 [
   {
-    "type": "img",
-    "src": "/assets/2025-09-11/d726b7483307d8d8dfa38653fe415ffc78e6e2cd.png@3840w_360h_1c.avif",
-    "width": 1920,
-    "height": 180,
-    "transform": [1, 0, 0, 1, 0, 0]
+    "type": "single-image",
+    "src": "/assets/2025-09-11/d726b7483307d8d8dfa38653fe415ffc78e6e2cd.png@3840w_360h_1c.avif"
   }
 ]

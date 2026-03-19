@@ -3,7 +3,8 @@ import type {
   BannerDetail,
   MotionLayer,
   ParticleLayer,
-  SimpleVideoLayer,
+  SingleImageLayer,
+  SingleVideoLayer,
 } from "./types";
 
 export interface BaseRenderer {
@@ -27,22 +28,22 @@ export class FailedRenderer implements BaseRenderer {
   public dispose(): void {}
 }
 
-export class SimpleVideoRenderer implements BaseRenderer {
-  private video: HTMLVideoElement | null = null;
+export class SingleVideoRenderer implements BaseRenderer {
   private wrapper: HTMLElement | null = null;
+  private video: HTMLVideoElement | null = null;
 
   public render(container: HTMLElement, detail: BannerDetail): void {
-    const simpleVideoItem = detail.layers.find(
-      (item): item is SimpleVideoLayer => item.type === "simple-video",
+    const singleVideoItem = detail.layers.find(
+      (item): item is SingleVideoLayer => item.type === "single-video",
     );
-    if (!simpleVideoItem) return;
+    if (!singleVideoItem) return;
 
     this.wrapper = document.createElement("div");
-    this.wrapper.className = "simple-video-container";
+    this.wrapper.className = "single-video-container";
 
     this.video = document.createElement("video");
     this.video.src =
-      import.meta.env.BASE_URL + simpleVideoItem.src.replace(/^\//, "");
+      import.meta.env.BASE_URL + singleVideoItem.src.replace(/^\//, "");
     this.video.loop = true;
     this.video.autoplay = true;
     this.video.muted = true;
@@ -58,6 +59,40 @@ export class SimpleVideoRenderer implements BaseRenderer {
       this.video.pause();
       this.video.removeAttribute("src");
       this.video = null;
+    }
+    if (this.wrapper) {
+      this.wrapper.remove();
+      this.wrapper = null;
+    }
+  }
+}
+
+export class SingleImageRenderer implements BaseRenderer {
+  private wrapper: HTMLElement | null = null;
+  private img: HTMLImageElement | null = null;
+
+  public render(container: HTMLElement, detail: BannerDetail): void {
+    const singleImageItem = detail.layers.find(
+      (item): item is SingleImageLayer => item.type === "single-image",
+    );
+    if (!singleImageItem) return;
+
+    this.wrapper = document.createElement("div");
+    this.wrapper.className = "single-image-container";
+
+    this.img = document.createElement("img");
+    this.img.src =
+      import.meta.env.BASE_URL + singleImageItem.src.replace(/^\//, "");
+
+    this.wrapper.appendChild(this.img);
+    container.innerHTML = "";
+    container.appendChild(this.wrapper);
+  }
+
+  public dispose(): void {
+    if (this.img) {
+      this.img.removeAttribute("src");
+      this.img = null;
     }
     if (this.wrapper) {
       this.wrapper.remove();

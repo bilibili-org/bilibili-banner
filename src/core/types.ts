@@ -21,8 +21,13 @@ interface VideoLayer extends BaseLayer {
   type: "video";
 }
 
-export interface SimpleVideoLayer {
-  type: "simple-video";
+export interface SingleVideoLayer {
+  type: "single-video";
+  src: string;
+}
+
+export interface SingleImageLayer {
+  type: "single-image";
   src: string;
 }
 
@@ -38,7 +43,9 @@ export interface ParticleLayer {
 
 export type MotionLayer = ImageLayer | VideoLayer;
 
-export type Layers = Array<MotionLayer | SimpleVideoLayer | ParticleLayer>;
+export type Layers = Array<
+  MotionLayer | SingleVideoLayer | SingleImageLayer | ParticleLayer
+>;
 
 // ─────────────────────── 数据加载器相关 ───────────────────────
 
@@ -53,12 +60,18 @@ export interface BannerManifestEntry {
 }
 
 export type BannerState = "loading" | "success" | "failed";
+export type BannerType =
+  | "single-image"
+  | "single-video"
+  | "multi-layer"
+  | "unknown";
 
 export interface BannerDetail {
   name: string;
   path: string;
-  layers: Layers;
+  type: BannerType;
   state: BannerState;
+  layers: Layers;
 }
 
 export interface DailyBannerDetail {

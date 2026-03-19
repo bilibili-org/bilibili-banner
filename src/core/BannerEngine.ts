@@ -3,7 +3,8 @@ import {
   FailedRenderer,
   LoadingRenderer,
   ParallaxRenderer,
-  SimpleVideoRenderer,
+  SingleImageRenderer,
+  SingleVideoRenderer,
 } from "./Renderer";
 import type { BannerDetail } from "./types";
 
@@ -43,14 +44,18 @@ export default class BannerEngine {
     } else if (detail.state === "failed") {
       this.renderer = new FailedRenderer();
     } else if (detail.state === "success") {
-      const isSimpleVideo = detail.layers.some(
-        (l) => l.type === "simple-video",
-      );
-
-      if (isSimpleVideo) {
-        this.renderer = new SimpleVideoRenderer();
-      } else {
-        this.renderer = new ParallaxRenderer();
+      switch (detail.type) {
+        case "single-image":
+          this.renderer = new SingleImageRenderer();
+          break;
+        case "single-video":
+          this.renderer = new SingleVideoRenderer();
+          break;
+        case "multi-layer":
+          this.renderer = new ParallaxRenderer();
+          break;
+        default:
+          this.renderer = new FailedRenderer();
       }
     }
 

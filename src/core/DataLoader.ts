@@ -6,10 +6,11 @@ import type {
   Layers,
   MotionLayer,
   ParticleLayer,
-  SimpleVideoLayer,
+  SingleImageLayer,
+  SingleVideoLayer,
 } from "./types";
 
-function parseLayerData(rawData: unknown): Layers {
+export function parseLayerData(rawData: unknown): Layers {
   if (!Array.isArray(rawData)) {
     throw new Error("[BannerDataLoader] 数据格式错误: 期望数组类型层配置");
   }
@@ -20,8 +21,11 @@ function parseLayerData(rawData: unknown): Layers {
       case "particle":
         layers.push(item as ParticleLayer);
         break;
-      case "simple-video":
-        layers.push(item as SimpleVideoLayer);
+      case "single-video":
+        layers.push(item as SingleVideoLayer);
+        break;
+      case "single-image":
+        layers.push(item as SingleImageLayer);
         break;
       case "video":
       case "img":
@@ -51,6 +55,7 @@ export async function loadBannerManifest(): Promise<DailyBannerDetail[]> {
     const banners: BannerDetail[] = entry.configs.map((v) => ({
       name: v.name,
       path: v.path || entry.date,
+      type: "unknown",
       layers: [], // 初始为空，按需加载
       state: "loading",
     }));
@@ -62,9 +67,8 @@ export async function loadBannerManifest(): Promise<DailyBannerDetail[]> {
   });
 }
 
-export async function fetchLayers(path: string): Promise<Layers> {
+export async function fetchLayerData(path: string): Promise<unknown> {
   const url = `${import.meta.env.BASE_URL}assets/${path}/data.json`;
   const res = await fetch(url);
-  const rawData = await res.json();
-  return parseLayerData(rawData);
+  return await res.json();
 }
