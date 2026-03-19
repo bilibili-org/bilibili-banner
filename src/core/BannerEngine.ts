@@ -14,7 +14,7 @@ export default class BannerEngine {
   private renderer: BaseRenderer | null = null;
 
   constructor() {
-    this.bannerContainer = document.querySelector(".banner-container");
+    this.bannerContainer = document.getElementById("banner-container");
     this.animatedBanner =
       this.bannerContainer?.querySelector(".animated-banner") || null;
   }

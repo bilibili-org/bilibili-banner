@@ -193,7 +193,8 @@ export default class BannerTimeLine {
         dropdown.appendChild(btn);
       });
 
-      document.body.appendChild(dropdown);
+      const app = document.getElementById("app");
+      app?.appendChild(dropdown);
       this._bodyDropdowns.push(dropdown);
 
       dropdown.addEventListener("mouseenter", this._clearTimerBound);
