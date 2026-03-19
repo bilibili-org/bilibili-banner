@@ -26,7 +26,7 @@ async function updateBanner(bannerDetail: BannerDetail) {
       bannerDetail.layers = layers;
       bannerDetail.state = "success";
     } catch (e) {
-      console.error(`[Main] 无法加载 Banner 配置: ${bannerDetail.path}`, e);
+      console.error(`[Main] 无法加载 Banner 配置: ${bannerDetail.path}\n`, e);
       bannerDetail.state = "failed";
     }
   }

@@ -3,7 +3,7 @@
   "layers": [
     {
       "type": "img",
-      "src": "./assets/2021-02-17/da55fab2e559b4458ece1f92b9060d6e1bccaac7.jpg",
+      "src": "assets/2021-02-17/da55fab2e559b4458ece1f92b9060d6e1bccaac7.jpg",
       "width": 2013,
       "height": 155,
       "transform": [1, 0, 0, 1, 0, 0],
@@ -12,7 +12,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2021-02-17/c60fe2b9198b5e5bff2a95984e6e4713d437850a.jpg",
+      "src": "assets/2021-02-17/c60fe2b9198b5e5bff2a95984e6e4713d437850a.jpg",
       "width": 2013,
       "height": 155,
       "transform": [1, 0, 0, 1, 0, 0],
@@ -21,7 +21,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2021-02-17/fde1b66498105fb1e578229eb0f8467ffb2af8a8.png",
+      "src": "assets/2021-02-17/fde1b66498105fb1e578229eb0f8467ffb2af8a8.png",
       "width": 2390,
       "height": 184,
       "transform": [0.984808, 0.173648, -0.173648, 0.984808, 40, 16],
@@ -32,7 +32,7 @@
     },
     {
       "type": "video",
-      "src": "./assets/2021-02-17/5c4fed9e-7fd4-4a53-83bc-4989120e08e1",
+      "src": "assets/2021-02-17/5c4fed9e-7fd4-4a53-83bc-4989120e08e1",
       "width": 2016,
       "height": 155,
       "transform": [1, 0, 0, 1, 0, 0],
@@ -41,7 +41,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2021-02-17/988b9d12af48795d74f329aefcbc95e017ac21e4.png",
+      "src": "assets/2021-02-17/988b9d12af48795d74f329aefcbc95e017ac21e4.png",
       "width": 2013,
       "height": 155,
       "transform": [1, 0, 0, 1, 0, 0],
@@ -50,7 +50,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2021-02-17/d158e27e6472ef1d9c867ae0a0b04a9ce477493f.png",
+      "src": "assets/2021-02-17/d158e27e6472ef1d9c867ae0a0b04a9ce477493f.png",
       "width": 2013,
       "height": 155,
       "transform": [1, 0, 0, 1, 0, 0],
@@ -60,7 +60,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2021-02-17/c73c48819e0437acbe706243766dcab2d306382c.png",
+      "src": "assets/2021-02-17/c73c48819e0437acbe706243766dcab2d306382c.png",
       "width": 2013,
       "height": 155,
       "transform": [1, 0, 0, 1, 0, 0],
@@ -70,7 +70,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2021-02-17/5d42a6a09267633ff59ce08959e30dc0dc9adcf2.png",
+      "src": "assets/2021-02-17/5d42a6a09267633ff59ce08959e30dc0dc9adcf2.png",
       "width": 2013,
       "height": 155,
       "transform": [1, 0, 0, 1, 0, 0],
@@ -80,7 +80,7 @@
     },
     {
       "type": "particle",
-      "srcs": ["/assets/2021-02-17/snowflake.png"],
+      "srcs": ["assets/2021-02-17/snowflake.png"],
       "angleRange": [170, 190],
       "count": 10,
       "opacityRange": [0.5, 0.8],

@@ -1,12 +1,11 @@
-import puppeteer, { Browser, Page } from "puppeteer";
 import fs from "node:fs";
-import path from "node:path";
+import path, { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { dirname } from "node:path";
+import puppeteer, { type Browser, type Page } from "puppeteer";
 import type {
+  BannerManifestEntry,
   Layers,
   MediaLayer,
-  BannerManifestEntry,
 } from "../src/core/types";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -126,7 +125,7 @@ async function setupArchiveBanner(
   try {
     await page.waitForSelector(".animated-banner", { timeout: 10000 });
     await sleep(3000);
-  } catch (e) {
+  } catch (_e) {
     console.warn("未直接检测到 .animated-banner，尝试滚动页面...");
     await page.evaluate(() => window.scrollTo(0, 100));
     await sleep(10000);
@@ -182,7 +181,7 @@ function transformLayerSrc(data: LayerMetadata[], dataDir: string): string[] {
     if (item.src) {
       urls.push(item.src);
       const fileName = item.src.split("/").pop()?.split("?")[0] || "unknown";
-      item.src = `./assets/${dirName}/${fileName}`;
+      item.src = `assets/${dirName}/${fileName}`;
     }
   }
   return urls;
@@ -210,9 +209,9 @@ async function downloadAssets(
       fs.writeFileSync(filePath, Buffer.from(content.buffer));
       current++;
       process.stdout.write(`\r下载进度: (${current}/${total}) `);
-    } catch (e: any) {
+    } catch (error: unknown) {
       process.stdout.write("\n");
-      console.warn(`下载素材失败: ${url}`, e.message);
+      console.warn(`下载素材失败: ${url}`, (error as Error).message);
     }
   }
   process.stdout.write("\n");
@@ -355,7 +354,7 @@ function calcBlur(
     if (defBlur !== 0) {
       layerMetadata.blur = defBlur;
     } else {
-      delete (layerMetadata as any).blur;
+      delete layerMetadata.blur;
     }
   } else {
     layerMetadata.blur = [defBlur, blurLeft, blurRight];
@@ -430,6 +429,7 @@ async function scrapeMoveParams(
  * Priority: type, src, width, height, transform, xSpeed, ySpeed...
  * Others: alphabetical
  */
+// biome-ignore lint/suspicious/noExplicitAny: common utility for sorting keys
 function sortObjectKeys(obj: any): any {
   const priorityKeys = [
     "type",
@@ -448,6 +448,7 @@ function sortObjectKeys(obj: any): any {
   );
   const otherKeys = allKeys.filter((key) => !priorityKeys.includes(key)).sort();
 
+  // biome-ignore lint/suspicious/noExplicitAny: common utility for sorting keys
   const sortedObj: any = {};
 
   for (const key of presentPriorityKeys) {
@@ -536,8 +537,8 @@ function updateBannerManifest(date: string): void {
 
     fs.writeFileSync(configFilePath, JSON.stringify(banners, null, 2), "utf8");
     console.log("已更新 banner.json 配置文件");
-  } catch (error: any) {
-    console.error(`更新配置文件失败: ${error.message}`);
+  } catch (error: unknown) {
+    console.error(`更新配置文件失败: ${(error as Error).message}`);
   }
 }
 
@@ -580,8 +581,8 @@ async function runGrabber(date: string, targetUrl: string): Promise<boolean> {
     await downloadAssets(remoteUrls, page, dataDir);
     console.log("抓取完成！运行 pnpm dev 查看效果");
     return true;
-  } catch (error: any) {
-    console.error("抓取出错:", error.message);
+  } catch (error: unknown) {
+    console.error("抓取出错:", (error as Error).message);
     return false;
   } finally {
     if (browser) {

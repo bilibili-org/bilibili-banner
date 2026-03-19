@@ -3,7 +3,7 @@
   "layers": [
     {
       "type": "img",
-      "src": "./assets/2024-02-01/01b79b5b5b38d7305a0ca1780c24662cc5a59f18.png@1c.webp",
+      "src": "assets/2024-02-01/01b79b5b5b38d7305a0ca1780c24662cc5a59f18.png@1c.webp",
       "width": 1728,
       "height": 162,
       "transform": [1, 0, 0, 1, 0, 0],
@@ -12,7 +12,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2024-02-01/fe903820ca0f604ef24f16ff7ad51192ead3d0c8.png@1c.webp",
+      "src": "assets/2024-02-01/fe903820ca0f604ef24f16ff7ad51192ead3d0c8.png@1c.webp",
       "width": 1728,
       "height": 162,
       "transform": [1, 0, 0, 1, 0, -9],
@@ -21,7 +21,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2024-02-01/73fcb8a56776307147c140f68bf9c5793696ae88.png@1c.webp",
+      "src": "assets/2024-02-01/73fcb8a56776307147c140f68bf9c5793696ae88.png@1c.webp",
       "width": 1728,
       "height": 148,
       "transform": [1, 0, 0, 1, 0, 0],
@@ -30,7 +30,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2024-02-01/b8a5bcf77a07793ce50294a8cb14a9fb8f2cea83.png@1c.webp",
+      "src": "assets/2024-02-01/b8a5bcf77a07793ce50294a8cb14a9fb8f2cea83.png@1c.webp",
       "width": 826,
       "height": 76,
       "transform": [1, 0, 0, 1, 0, -40],
@@ -39,7 +39,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2024-02-01/1fd3d44b8f890b88cf52f6bcc041326b30e7cb62.png@1c.webp",
+      "src": "assets/2024-02-01/1fd3d44b8f890b88cf52f6bcc041326b30e7cb62.png@1c.webp",
       "width": 1523,
       "height": 180,
       "transform": [1, 0, 0, 1, 100, 0],
@@ -48,7 +48,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2024-02-01/085bc5e7f70b625b62c1f5d374f55acbd828ab65.png@1c.webp",
+      "src": "assets/2024-02-01/085bc5e7f70b625b62c1f5d374f55acbd828ab65.png@1c.webp",
       "width": 382,
       "height": 67,
       "transform": [1, 0, 0, 1, -126, -45],
@@ -57,7 +57,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2024-02-01/3e16264878dd88c1b8ead37aab07a9363186b18c.png@1c.webp",
+      "src": "assets/2024-02-01/3e16264878dd88c1b8ead37aab07a9363186b18c.png@1c.webp",
       "width": 1920,
       "height": 156,
       "transform": [1, 0, 0, 1, 0, 10],
@@ -66,7 +66,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2024-02-01/8902051ab71c8093a85ce2a71882054ee91ea631.png@1c.webp",
+      "src": "assets/2024-02-01/8902051ab71c8093a85ce2a71882054ee91ea631.png@1c.webp",
       "width": 125,
       "height": 131,
       "transform": [1, 0, 0, 1, 276, -48],
@@ -76,7 +76,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2024-02-01/c9231e763120806f3e918d06ad3f415e920c2b73.png@1c.webp",
+      "src": "assets/2024-02-01/c9231e763120806f3e918d06ad3f415e920c2b73.png@1c.webp",
       "width": 589,
       "height": 180,
       "transform": [1, 0, 0, 1, 660, 0],
@@ -85,7 +85,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2024-02-01/67a3c27832d63060d88fbd7bdb2fc543e3fb9ddf.png@1c.webp",
+      "src": "assets/2024-02-01/67a3c27832d63060d88fbd7bdb2fc543e3fb9ddf.png@1c.webp",
       "width": 420,
       "height": 157,
       "transform": [1, 0, 0, 1, 750, 0],
@@ -94,7 +94,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2024-02-01/c651a0183b81857191c86b133c5a777059b13571.png@1c.webp",
+      "src": "assets/2024-02-01/c651a0183b81857191c86b133c5a777059b13571.png@1c.webp",
       "width": 370,
       "height": 142,
       "transform": [1, 0, 0, 1, 503.5, 14.25],
@@ -103,7 +103,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2024-02-01/6afc90f36610318b4785a52c1a51ef6f1de9d25b.png@1c.webp",
+      "src": "assets/2024-02-01/6afc90f36610318b4785a52c1a51ef6f1de9d25b.png@1c.webp",
       "width": 172,
       "height": 133,
       "transform": [1, 0, 0, 1, 504, 13.5],
@@ -112,7 +112,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2024-02-01/476679726643b3b6cc5599b882d85953ef34f3d9.png@1c.webp",
+      "src": "assets/2024-02-01/476679726643b3b6cc5599b882d85953ef34f3d9.png@1c.webp",
       "width": 203,
       "height": 149,
       "transform": [1, 0, 0, 1, -171, -4.5],
@@ -121,7 +121,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2024-02-01/121335f79c78bb6f47e4fc7dae4b0af0eac804bb.png@1c.webp",
+      "src": "assets/2024-02-01/121335f79c78bb6f47e4fc7dae4b0af0eac804bb.png@1c.webp",
       "width": 732,
       "height": 162,
       "transform": [1, 0, 0, 1, -540, 0],
@@ -130,7 +130,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2024-02-01/590a6dd64ff00d5d0e63e230188939c405253452.png@1c.webp",
+      "src": "assets/2024-02-01/590a6dd64ff00d5d0e63e230188939c405253452.png@1c.webp",
       "width": 292,
       "height": 112,
       "transform": [1, 0, 0, 1, -332.5, 23.75],
@@ -139,7 +139,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2024-02-01/e00c60ae700774655af2e2516a13a5b1fa2fcfe7.png@1c.webp",
+      "src": "assets/2024-02-01/e00c60ae700774655af2e2516a13a5b1fa2fcfe7.png@1c.webp",
       "width": 191,
       "height": 116,
       "transform": [1, 0, 0, 1, -551, 23.75],
@@ -148,7 +148,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2024-02-01/357dd346995f678c43eb6bf51fe02f47bbe7db7d.png@1c.webp",
+      "src": "assets/2024-02-01/357dd346995f678c43eb6bf51fe02f47bbe7db7d.png@1c.webp",
       "width": 379,
       "height": 144,
       "transform": [1, 0, 0, 1, -880, 16],
@@ -157,7 +157,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2024-02-01/bae427c01d895b63e6aaf6b0c239b86027527e6a.png@1c.webp",
+      "src": "assets/2024-02-01/bae427c01d895b63e6aaf6b0c239b86027527e6a.png@1c.webp",
       "width": 288,
       "height": 145,
       "transform": [1, 0, 0, 1, 20, 10],
@@ -166,7 +166,7 @@
     },
     {
       "type": "video",
-      "src": "./assets/2024-02-01/a98a8707-3a16-4700-949b-57a2f9693deb",
+      "src": "assets/2024-02-01/a98a8707-3a16-4700-949b-57a2f9693deb",
       "width": 2112,
       "height": 154,
       "transform": [1, 0, 0, 1, 0, 0],
@@ -175,7 +175,7 @@
     },
     {
       "type": "video",
-      "src": "./assets/2024-02-01/83d47d6f-2598-454f-9ffa-495ee5f3d270",
+      "src": "assets/2024-02-01/83d47d6f-2598-454f-9ffa-495ee5f3d270",
       "width": 420,
       "height": 630,
       "transform": [1, 0, 0, 1, 42, -84],

@@ -3,7 +3,7 @@
   "layers": [
     {
       "type": "img",
-      "src": "./assets/2023-07-18/ba5cd3169f8917a807eb7252b7dec8ce463b1aec.png",
+      "src": "assets/2023-07-18/ba5cd3169f8917a807eb7252b7dec8ce463b1aec.png",
       "width": 1950,
       "height": 183,
       "transform": [1, 0, 0, 1, -130, 13],
@@ -12,7 +12,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2023-07-18/bec899e8e28c8b672fb05300d3ca2ea8c7ff216c.png",
+      "src": "assets/2023-07-18/bec899e8e28c8b672fb05300d3ca2ea8c7ff216c.png",
       "width": 711,
       "height": 148,
       "transform": [1, 0, 0, 1, -76.95, 42.75],
@@ -21,7 +21,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2023-07-18/0f2913b79df87a94bbd13c7c74c43b897f4d3f51.png",
+      "src": "assets/2023-07-18/0f2913b79df87a94bbd13c7c74c43b897f4d3f51.png",
       "width": 1761,
       "height": 193,
       "transform": [1, 0, 0, 1, 55, 11],
@@ -30,7 +30,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2023-07-18/8674ce64bede95844bb8457227d064869271f771.png",
+      "src": "assets/2023-07-18/8674ce64bede95844bb8457227d064869271f771.png",
       "width": 129,
       "height": 73,
       "transform": [1, 0, 0, 1, -112, 17.5],
@@ -39,7 +39,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2023-07-18/e930ee4471ebb7f94a57993d22622fedd98ad68a.png",
+      "src": "assets/2023-07-18/e930ee4471ebb7f94a57993d22622fedd98ad68a.png",
       "width": 858,
       "height": 129,
       "transform": [1, 0, 0, 1, -49, -24.5],
@@ -48,7 +48,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2023-07-18/4b6146a07413b4cfa730e5556a9869d53f224486.png",
+      "src": "assets/2023-07-18/4b6146a07413b4cfa730e5556a9869d53f224486.png",
       "width": 866,
       "height": 91,
       "transform": [1, 0, 0, 1, 0, 0],
@@ -57,7 +57,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2023-07-18/4ea90173bc47370eb96686fc1e927532c2408a0d.png",
+      "src": "assets/2023-07-18/4ea90173bc47370eb96686fc1e927532c2408a0d.png",
       "width": 884,
       "height": 210,
       "transform": [1, 0, 0, 1, -112.5, 7.5],
@@ -66,7 +66,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2023-07-18/b11ff52ee378576bd8e8b599b476a06b76f62358.png",
+      "src": "assets/2023-07-18/b11ff52ee378576bd8e8b599b476a06b76f62358.png",
       "width": 1178,
       "height": 101,
       "transform": [1, 0, 0, 1, -195, 48.75],
@@ -75,7 +75,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2023-07-18/3b1013489a2fefed0760da9ba6a95cc43218ba85.png",
+      "src": "assets/2023-07-18/3b1013489a2fefed0760da9ba6a95cc43218ba85.png",
       "width": 1178,
       "height": 101,
       "transform": [1, 0, 0, 1, -195, 48.75],
@@ -84,7 +84,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2023-07-18/2faa24cff4f13d493dc76beea634e7840ed3ca69.png",
+      "src": "assets/2023-07-18/2faa24cff4f13d493dc76beea634e7840ed3ca69.png",
       "width": 1068,
       "height": 196,
       "transform": [1, 0, 0, 1, 0, 0],
@@ -93,7 +93,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2023-07-18/87ac30c47f536983bf73d470636a5e51e89a52df.png",
+      "src": "assets/2023-07-18/87ac30c47f536983bf73d470636a5e51e89a52df.png",
       "width": 946,
       "height": 196,
       "transform": [1, 0, 0, 1, 350, 14],
@@ -104,7 +104,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2023-07-18/1e01a872a8d2d6e1c0f25aab4e673547e77835ed.png",
+      "src": "assets/2023-07-18/1e01a872a8d2d6e1c0f25aab4e673547e77835ed.png",
       "width": 181,
       "height": 66,
       "transform": [1, 0, 0, 1, 420, 0],
@@ -114,7 +114,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2023-07-18/b2572bfb91efc75976a0a32ad4019976ba5c8038.png",
+      "src": "assets/2023-07-18/b2572bfb91efc75976a0a32ad4019976ba5c8038.png",
       "width": 2377,
       "height": 224,
       "transform": [1, 0, 0, 1, 0, 0],
@@ -123,7 +123,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2023-07-18/28578475f927ad32ac880c1c33b61cdbb69b1806.png",
+      "src": "assets/2023-07-18/28578475f927ad32ac880c1c33b61cdbb69b1806.png",
       "width": 1122,
       "height": 154,
       "transform": [1, 0, 0, 1, 0, 0],
@@ -132,7 +132,7 @@
     },
     {
       "type": "img",
-      "src": "./assets/2023-07-18/f6b31a755e00e56d73d576503a30bfbac8a745e0.png",
+      "src": "assets/2023-07-18/f6b31a755e00e56d73d576503a30bfbac8a745e0.png",
       "width": 1084,
       "height": 113,
       "transform": [1, 0, 0, 1, 12, 0],
