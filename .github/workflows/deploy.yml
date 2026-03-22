@@ -1,12 +1,6 @@
 name: Deploy to GitHub Pages
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "src/**"
-      - "public/**"
-      - "index.html"
   workflow_dispatch:
 
 jobs:
