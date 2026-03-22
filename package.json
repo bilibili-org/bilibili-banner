@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "grab": "tsx --env-file=.env scripts/grab.ts",
     "check": "biome check --write ."
@@ -15,6 +16,7 @@
     "@types/node": "^25.5.0",
     "puppeteer": "^24.37.5",
     "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
     "vite": "^7.3.1"
   },
   "type": "module",

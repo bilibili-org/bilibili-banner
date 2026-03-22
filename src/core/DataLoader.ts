@@ -1,44 +1,37 @@
-import BANNER_MANIFEST_JSON from "../data/banner.json";
 import type {
-  BannerDetail,
-  BannerManifestEntry,
-  BannerType,
-  DailyBannerDetail,
+  BannerConfig,
+  BannerRef,
   Layers,
   MediaLayer,
   ParticleLayer,
 } from "./types";
 
-/**
- * 仅加载 Banner 元数据列表（不包含具体的图层数据）
- */
-export async function loadBannerManifest(): Promise<DailyBannerDetail[]> {
-  const bannerManifest = BANNER_MANIFEST_JSON as BannerManifestEntry[];
+export class BannerLoader {
+  private bannerCache: Map<string, BannerConfig> = new Map();
 
-  return bannerManifest.map((entry) => {
-    const banners: BannerDetail[] = entry.configs.map((v) => ({
-      name: v.name,
-      path: v.path || entry.date,
-      type: "unknown",
-      layers: [], // 初始为空，按需加载
-      state: "loading",
-    }));
+  public getCached(path: string): BannerConfig | undefined {
+    return this.bannerCache.get(path);
+  }
 
-    return {
-      date: entry.date,
-      banners: banners,
-    };
-  });
+  public async load(ref: BannerRef): Promise<BannerConfig> {
+    const cachedBanner = this.bannerCache.get(ref.path);
+    if (cachedBanner) {
+      return cachedBanner;
+    }
+
+    const banner = await parseBannerData(ref);
+    this.bannerCache.set(ref.path, banner);
+    return banner;
+  }
 }
 
-export async function parseBannerData(
-  path: string,
-): Promise<{ type: BannerType; layers: Layers }> {
-  const url = `${import.meta.env.BASE_URL}assets/${path}/data.json`;
+async function parseBannerData(ref: BannerRef): Promise<BannerConfig> {
+  const url = `${import.meta.env.BASE_URL}assets/${ref.path}/data.json`;
   const res = await fetch(url);
   const rawData = await res.json();
 
   return {
+    ...ref,
     type: rawData.type,
     layers: parseLayerData(rawData.layers),
   };

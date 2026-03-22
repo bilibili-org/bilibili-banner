@@ -2,11 +2,7 @@ import fs from "node:fs";
 import path, { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import puppeteer, { type Browser, type Page } from "puppeteer";
-import type {
-  BannerManifestEntry,
-  Layers,
-  MediaLayer,
-} from "../src/core/types";
+import type { DailyBannerGroup, Layers, MediaLayer } from "../src/core/types";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -42,6 +38,18 @@ interface LayerState {
   blur: number;
 }
 
+interface AssetDownloadTask {
+  sourceUrl: string;
+  fileName: string;
+  filePath: string;
+}
+
+interface DownloadSummary {
+  total: number;
+  successCount: number;
+  failed: Array<{ url: string; reason: string }>;
+}
+
 // ─────────────────────── Utility Functions ───────────────────────
 
 function sleep(ms: number): Promise<void> {
@@ -56,16 +64,39 @@ function generateDate(): string {
   return `${y}-${m}-${d}`;
 }
 
-function prepareDataDir(dataDir: string): void {
-  const dirName = path.basename(dataDir);
-  if (fs.existsSync(dataDir)) {
-    fs.readdirSync(dataDir).forEach((file) => {
-      fs.unlinkSync(path.join(dataDir, file));
-    });
-    console.log("已清空目录", dirName);
-  } else {
-    fs.mkdirSync(dataDir, { recursive: true });
-    console.log("已创建目录", dirName);
+function removeDirIfExists(dirPath: string): void {
+  if (fs.existsSync(dirPath)) {
+    fs.rmSync(dirPath, { recursive: true, force: true });
+  }
+}
+
+function prepareEmptyDir(dataDir: string): void {
+  removeDirIfExists(dataDir);
+  fs.mkdirSync(dataDir, { recursive: true });
+  console.log("已准备临时目录", path.basename(dataDir));
+}
+
+function publishDataDir(stagedDir: string, targetDir: string): void {
+  const targetDirExists = fs.existsSync(targetDir);
+  const backupDir = `${targetDir}.bak-${Date.now()}`;
+
+  try {
+    if (targetDirExists) {
+      fs.renameSync(targetDir, backupDir);
+    }
+
+    fs.renameSync(stagedDir, targetDir);
+
+    if (targetDirExists) {
+      removeDirIfExists(backupDir);
+    }
+
+    console.log("已发布资源目录", path.basename(targetDir));
+  } catch (error: unknown) {
+    if (!fs.existsSync(targetDir) && fs.existsSync(backupDir)) {
+      fs.renameSync(backupDir, targetDir);
+    }
+    throw error;
   }
 }
 
@@ -174,47 +205,97 @@ async function parseLayers(page: Page): Promise<LayerMetadata[]> {
   return data;
 }
 
-function transformLayerSrc(data: LayerMetadata[], dataDir: string): string[] {
-  const dirName = path.basename(dataDir);
-  const urls: string[] = [];
+function buildAssetDownloadTasks(
+  data: LayerMetadata[],
+  targetDirName: string,
+  stagedDir: string,
+): AssetDownloadTask[] {
+  const tasks: AssetDownloadTask[] = [];
+  const seenUrls = new Set<string>();
+  const fileSourceMap = new Map<string, string>();
+
   for (const item of data) {
     if (item.src) {
-      urls.push(item.src);
-      const fileName = item.src.split("/").pop()?.split("?")[0] || "unknown";
-      item.src = `assets/${dirName}/${fileName}`;
+      const sourceUrl = item.src;
+      const fileName = sourceUrl.split("/").pop()?.split("?")[0] || "unknown";
+      const existingSource = fileSourceMap.get(fileName);
+
+      if (existingSource && existingSource !== sourceUrl) {
+        throw new Error(
+          `资源文件名冲突: ${fileName}\n${existingSource}\n${sourceUrl}`,
+        );
+      }
+
+      fileSourceMap.set(fileName, sourceUrl);
+      item.src = `assets/${targetDirName}/${fileName}`;
+
+      if (!seenUrls.has(sourceUrl)) {
+        seenUrls.add(sourceUrl);
+        tasks.push({
+          sourceUrl,
+          fileName,
+          filePath: path.join(stagedDir, fileName),
+        });
+      }
     }
   }
-  return urls;
+
+  return tasks;
 }
 
 async function downloadAssets(
-  urls: string[],
+  tasks: AssetDownloadTask[],
   page: Page,
-  dataDir: string,
-): Promise<void> {
-  const total = urls.length;
+): Promise<DownloadSummary> {
+  const total = tasks.length;
   console.log(`开始下载资源素材 (共 ${total} 个)...`);
-  let current = 0;
-  for (const url of urls) {
-    const fileName = url.split("/").pop()?.split("?")[0] || "unknown";
-    const filePath = path.join(dataDir, fileName);
+  let successCount = 0;
+  const failed: DownloadSummary["failed"] = [];
 
+  for (const task of tasks) {
     try {
-      const content = await page.evaluate(async (assetUrl) => {
-        const res = await fetch(assetUrl);
-        const buffer = await res.arrayBuffer();
-        return { buffer: Array.from(new Uint8Array(buffer)) };
-      }, url);
+      let buffer: Buffer;
 
-      fs.writeFileSync(filePath, Buffer.from(content.buffer));
-      current++;
-      process.stdout.write(`\r下载进度: (${current}/${total}) `);
+      if (task.sourceUrl.startsWith("blob:")) {
+        const content = await page.evaluate(async (assetUrl) => {
+          const res = await fetch(assetUrl);
+
+          if (!res.ok) {
+            throw new Error(`HTTP ${res.status} ${res.statusText}`);
+          }
+
+          const arrayBuffer = await res.arrayBuffer();
+          return Array.from(new Uint8Array(arrayBuffer));
+        }, task.sourceUrl);
+
+        buffer = Buffer.from(content);
+      } else {
+        const res = await fetch(task.sourceUrl);
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status} ${res.statusText}`);
+        }
+
+        buffer = Buffer.from(await res.arrayBuffer());
+      }
+
+      fs.writeFileSync(task.filePath, buffer);
+
+      successCount++;
+      process.stdout.write(`\r下载进度: (${successCount}/${total}) `);
     } catch (error: unknown) {
       process.stdout.write("\n");
-      console.warn(`下载素材失败: ${url}`, (error as Error).message);
+      const reason = error instanceof Error ? error.message : String(error);
+      failed.push({ url: task.sourceUrl, reason });
     }
   }
   process.stdout.write("\n");
+
+  return {
+    total,
+    successCount,
+    failed,
+  };
 }
 
 async function captureLayerStates(page: Page): Promise<LayerState[]> {
@@ -508,45 +589,45 @@ function dumpLayerMetadatas(
 
 function updateBannerManifest(date: string): void {
   const configFilePath = path.resolve(__dirname, "../src/data/banner.json");
-  const bannerName = date;
 
-  let banners: BannerManifestEntry[] = [];
-  try {
-    if (fs.existsSync(configFilePath)) {
-      banners = JSON.parse(fs.readFileSync(configFilePath, "utf8"));
-    }
-
-    const existingIndex = banners.findIndex((b) => b.date === date);
-    if (existingIndex !== -1) {
-      const variantExists = (banners[existingIndex].configs || []).some(
-        (v) => v.name === bannerName,
-      );
-      if (!variantExists) {
-        if (!banners[existingIndex].configs)
-          banners[existingIndex].configs = [];
-        banners[existingIndex].configs.push({ name: bannerName });
-      }
-    } else {
-      banners.push({
-        date,
-        configs: [{ name: bannerName }],
-      });
-    }
-
-    banners.sort((a, b) => a.date.localeCompare(b.date));
-
-    fs.writeFileSync(configFilePath, JSON.stringify(banners, null, 2), "utf8");
-    console.log("已更新 banner.json 配置文件");
-  } catch (error: unknown) {
-    console.error(`更新配置文件失败: ${(error as Error).message}`);
+  let banners: DailyBannerGroup[] = [];
+  if (fs.existsSync(configFilePath)) {
+    banners = JSON.parse(fs.readFileSync(configFilePath, "utf8"));
   }
+
+  const bannerName = date;
+  const existingIndex = banners.findIndex((b) => b.date === date);
+  if (existingIndex !== -1) {
+    const variantExists = (banners[existingIndex].refs || []).some(
+      (v) => v.name === bannerName,
+    );
+    if (!variantExists) {
+      if (!banners[existingIndex].refs) banners[existingIndex].refs = [];
+      banners[existingIndex].refs.push({ name: bannerName, path: date });
+    }
+  } else {
+    banners.push({
+      date,
+      refs: [{ name: bannerName, path: date }],
+    });
+  }
+
+  banners.sort((a, b) => a.date.localeCompare(b.date));
+
+  fs.writeFileSync(configFilePath, JSON.stringify(banners, null, 2), "utf8");
+  console.log("已更新 banner.json 配置文件");
 }
 
 // ─────────────────────── Orchestrator ───────────────────────
 
 async function runGrabber(date: string, targetUrl: string): Promise<boolean> {
   const dataDir = path.resolve(__dirname, `../public/assets/${date}`);
+  const stagedDataDir = path.resolve(
+    __dirname,
+    `../temp/grab-${date}-${Date.now()}`,
+  );
   const isArchive = targetUrl.includes("web.archive.org");
+  const targetDirName = path.basename(dataDir);
 
   let browser: Browser | undefined;
   try {
@@ -571,14 +652,29 @@ async function runGrabber(date: string, targetUrl: string): Promise<boolean> {
       return false;
     }
 
-    const remoteUrls = transformLayerSrc(layerData, dataDir);
+    const assetTasks = buildAssetDownloadTasks(
+      layerData,
+      targetDirName,
+      stagedDataDir,
+    );
     await scrapeMoveParams(page, layerData);
 
-    updateBannerManifest(date);
+    prepareEmptyDir(stagedDataDir);
+    dumpLayerMetadatas(layerData, stagedDataDir);
 
-    prepareDataDir(dataDir);
-    dumpLayerMetadatas(layerData, dataDir);
-    await downloadAssets(remoteUrls, page, dataDir);
+    const downloadSummary = await downloadAssets(assetTasks, page);
+    if (downloadSummary.failed.length > 0) {
+      console.error(
+        `资源下载失败 ${downloadSummary.failed.length}/${downloadSummary.total}，已取消发布`,
+      );
+      downloadSummary.failed.forEach((item) => {
+        console.error(`- ${item.url}: ${item.reason}`);
+      });
+      return false;
+    }
+
+    publishDataDir(stagedDataDir, dataDir);
+    updateBannerManifest(date);
     console.log("抓取完成！运行 pnpm dev 查看效果");
     return true;
   } catch (error: unknown) {
@@ -588,6 +684,7 @@ async function runGrabber(date: string, targetUrl: string): Promise<boolean> {
     if (browser) {
       await browser.close();
     }
+    removeDirIfExists(stagedDataDir);
   }
 }
 

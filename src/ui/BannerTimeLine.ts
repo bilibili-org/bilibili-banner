@@ -1,16 +1,17 @@
-import type { BannerDetail, DailyBannerDetail } from "../core/types";
+import type { BannerRef, DailyBannerGroup } from "../core/types";
 
 export interface BannerTimeLineOptions {
   containerId?: string;
-  onVariantSelect?: (variant: BannerDetail) => void;
+  onVariantSelect?: (variant: BannerRef) => void;
 }
 
 export default class BannerTimeLine {
   private container: HTMLElement | null;
   private _bodyDropdowns: HTMLDivElement[] = [];
-  private onVariantSelect?: (variant: BannerDetail) => void;
-  private _itemDataMap: WeakMap<HTMLElement, DailyBannerDetail> = new WeakMap();
+  private onVariantSelect?: (variant: BannerRef) => void;
+  private _itemDataMap: WeakMap<HTMLElement, DailyBannerGroup> = new WeakMap();
   private _activeDropdownTimer?: number;
+  private activePath = "";
 
   private _boundHandleClick: (e: MouseEvent) => void;
   private _boundHandleMouseOver: (e: MouseEvent) => void;
@@ -53,36 +54,28 @@ export default class BannerTimeLine {
    * @param {LoadedBannerData[]} filteredData
    * @param {string} [targetPath] - 期望初始选中的变体路径
    */
-  public render(filteredData: DailyBannerDetail[], targetPath?: string): void {
+  public render(
+    filteredData: DailyBannerGroup[],
+    targetPath?: string,
+  ): BannerRef | undefined {
     if (!this.container) return;
 
     this._cleanupDropdowns();
     this.container.innerHTML = "";
 
-    // 计算初始选中的索引
-    let activeItemIndex = filteredData.length - 1;
-    let activeVariantIndex = 0;
-
-    if (targetPath) {
-      filteredData.forEach((item, i) => {
-        const vIdx = item.banners.findIndex((v) => v.path === targetPath);
-        if (vIdx !== -1) {
-          activeItemIndex = i;
-          activeVariantIndex = vIdx;
-        }
-      });
+    if (filteredData.length === 0) {
+      this.activePath = "";
+      return undefined;
     }
 
-    filteredData.forEach((item, index) => {
-      const isActive = index === activeItemIndex;
-      const itemEl = this._createTimelineItem(
-        item,
-        isActive,
-        isActive ? activeVariantIndex : 0,
-      );
+    const activeRef = this._resolveActiveBanner(filteredData, targetPath);
+    this.activePath = activeRef.path;
+
+    filteredData.forEach((item) => {
+      const itemEl = this._createTimelineItem(item);
       this.container?.appendChild(itemEl);
 
-      if (isActive) {
+      if (item.refs.some((banner) => banner.path === activeRef.path)) {
         setTimeout(() => {
           itemEl.scrollIntoView({
             behavior: "smooth",
@@ -93,12 +86,37 @@ export default class BannerTimeLine {
       }
     });
 
-    if (filteredData.length > 0) {
-      const targetItem = filteredData[activeItemIndex];
-      if (this.onVariantSelect) {
-        this.onVariantSelect(targetItem.banners[activeVariantIndex]);
-      }
+    return activeRef;
+  }
+
+  public setActiveVariant(targetPath: string): BannerRef | undefined {
+    if (!this.container) {
+      return undefined;
     }
+
+    let matchedVariant: BannerRef | undefined;
+
+    this.container.querySelectorAll(".timeline-item").forEach((element) => {
+      const itemEl = element as HTMLElement;
+      const itemData = this._itemDataMap.get(itemEl);
+      if (!itemData) {
+        return;
+      }
+
+      const variant =
+        itemData.refs.find((banner) => banner.path === targetPath) ?? undefined;
+      if (variant) {
+        matchedVariant = variant;
+      }
+    });
+
+    if (!matchedVariant) {
+      return undefined;
+    }
+
+    this.activePath = matchedVariant.path;
+    this._syncRenderedState();
+    return matchedVariant;
   }
 
   private _cleanupDropdowns(): void {
@@ -116,14 +134,16 @@ export default class BannerTimeLine {
     window.clearTimeout(this._activeDropdownTimer);
   private _hideDropdownScheduledBound = () => this._hideDropdownScheduled();
 
-  private _createTimelineItem(
-    item: DailyBannerDetail,
-    isActive: boolean,
-    activeVariantIndex: number = 0,
-  ): HTMLDivElement {
+  private _createTimelineItem(item: DailyBannerGroup): HTMLDivElement {
+    const activeVariantIndex = Math.max(
+      item.refs.findIndex((banner) => banner.path === this.activePath),
+      0,
+    );
+    const activeBanner = item.refs[activeVariantIndex];
+    const isActive = activeBanner.path === this.activePath;
+
     const itemEl = document.createElement("div");
-    const activeVariantState = item.banners[activeVariantIndex]?.state;
-    itemEl.className = `timeline-item ${isActive ? "active" : ""} ${activeVariantState === "failed" ? "load-failed" : ""}`;
+    itemEl.className = `timeline-item ${isActive ? "active" : ""}`;
 
     const content = document.createElement("div");
     content.className = "item-content";
@@ -136,14 +156,14 @@ export default class BannerTimeLine {
     name.className = "item-name";
 
     const nameText = document.createElement("span");
-    nameText.innerText = item.banners[activeVariantIndex].name;
+    nameText.innerText = activeBanner.name;
     name.appendChild(nameText);
 
     content.appendChild(dateStr);
     content.appendChild(name);
     itemEl.appendChild(content);
 
-    if (item.banners.length > 1) {
+    if (item.refs.length > 1) {
       itemEl.classList.add("has-variants");
 
       const arrow = document.createElementNS(
@@ -164,30 +184,15 @@ export default class BannerTimeLine {
       dropdown.id = dropdownId;
       dropdown.className = "variant-dropdown";
 
-      item.banners.forEach((variant: BannerDetail, index: number) => {
+      item.refs.forEach((variant: BannerRef) => {
         const btn = document.createElement("div");
-        btn.className = `variant-item ${index === activeVariantIndex && isActive ? "active" : ""} ${variant.state === "failed" ? "load-failed" : ""}`;
+        btn.className = `variant-item ${variant.path === this.activePath ? "active" : ""}`;
         btn.innerText = variant.name;
+        btn.dataset.path = variant.path;
 
         btn.addEventListener("click", (e: MouseEvent) => {
           e.stopPropagation();
-
-          if (this.container) {
-            this.container.querySelectorAll(".timeline-item").forEach((el) => {
-              el.classList.remove("active", "load-failed");
-            });
-          }
-          itemEl.classList.add("active");
-
-          dropdown.querySelectorAll(".variant-item").forEach((el) => {
-            el.classList.remove("active");
-          });
-          btn.classList.add("active");
-
-          nameText.innerText = variant.name;
-          if (this.onVariantSelect) {
-            this.onVariantSelect(variant);
-          }
+          this._activateVariant(variant, btn);
         });
 
         dropdown.appendChild(btn);
@@ -222,21 +227,16 @@ export default class BannerTimeLine {
     const itemData = this._itemDataMap.get(itemEl);
     if (!itemData) return;
 
-    const firstVariant = itemData.banners[0];
+    const firstVariant = itemData.refs[0];
+    const dropdownId = itemEl.dataset.dropdownId;
+    const dropdown = dropdownId
+      ? (document.getElementById(dropdownId) as HTMLDivElement | null)
+      : null;
+    const firstVariantButton = dropdown?.querySelector(
+      ".variant-item",
+    ) as HTMLDivElement | null;
 
-    if (this.container) {
-      this.container.querySelectorAll(".timeline-item").forEach((el) => {
-        el.classList.remove("active");
-      });
-    }
-    itemEl.classList.add("active");
-
-    const nameText = itemEl.querySelector("span > span") as HTMLElement;
-    if (nameText) nameText.innerText = firstVariant.name;
-
-    if (this.onVariantSelect) {
-      this.onVariantSelect(firstVariant);
-    }
+    this._activateVariant(firstVariant, firstVariantButton ?? undefined);
   }
 
   private _handleMouseOver(e: MouseEvent): void {
@@ -297,6 +297,80 @@ export default class BannerTimeLine {
     if (e.deltaY !== 0) {
       e.preventDefault();
       box.scrollLeft += e.deltaY;
+    }
+  }
+
+  private _resolveActiveBanner(
+    filteredData: DailyBannerGroup[],
+    targetPath?: string,
+  ): BannerRef {
+    if (targetPath) {
+      for (const item of filteredData) {
+        const matchedBanner = item.refs.find(
+          (banner) => banner.path === targetPath,
+        );
+        if (matchedBanner) {
+          return matchedBanner;
+        }
+      }
+    }
+
+    const fallbackItem = filteredData[filteredData.length - 1];
+    return fallbackItem.refs[0];
+  }
+
+  private _syncRenderedState(): void {
+    if (!this.container) {
+      return;
+    }
+
+    this.container.querySelectorAll(".timeline-item").forEach((element) => {
+      const itemEl = element as HTMLElement;
+      const itemData = this._itemDataMap.get(itemEl);
+      if (!itemData) {
+        return;
+      }
+
+      const activeVariantIndex = Math.max(
+        itemData.refs.findIndex((banner) => banner.path === this.activePath),
+        0,
+      );
+      const activeBanner = itemData.refs[activeVariantIndex];
+      const isActive = activeBanner.path === this.activePath;
+
+      itemEl.classList.toggle("active", isActive);
+
+      const nameText = itemEl.querySelector(
+        ".item-name > span",
+      ) as HTMLElement | null;
+      if (nameText) {
+        nameText.innerText = activeBanner.name;
+      }
+
+      const dropdownId = itemEl.dataset.dropdownId;
+      const dropdown = dropdownId
+        ? (document.getElementById(dropdownId) as HTMLDivElement | null)
+        : null;
+      dropdown?.querySelectorAll(".variant-item").forEach((dropdownItem) => {
+        const variantEl = dropdownItem as HTMLElement;
+        variantEl.classList.toggle(
+          "active",
+          variantEl.dataset.path === this.activePath,
+        );
+      });
+    });
+  }
+
+  private _activateVariant(
+    variant: BannerRef,
+    activeButton?: HTMLElement,
+  ): void {
+    this.activePath = variant.path;
+    this._syncRenderedState();
+    activeButton?.classList.add("active");
+
+    if (this.onVariantSelect) {
+      this.onVariantSelect(variant);
     }
   }
 }

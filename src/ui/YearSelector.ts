@@ -43,11 +43,16 @@ export default class YearSelector {
     this.currentYear = defaultYear || years[years.length - 1];
 
     this._renderYears(years);
+  }
 
-    // 首次初始化后对外抛出选中年份的通信
-    if (this.onYearChange) {
-      this.onYearChange(this.currentYear);
-    }
+  public setActiveYear(year: string): void {
+    if (!this.container || !year) return;
+
+    this.currentYear = year;
+    this.container.querySelectorAll(".year-item").forEach((el) => {
+      const yearItem = el as HTMLElement;
+      yearItem.classList.toggle("active", yearItem.dataset.year === year);
+    });
   }
 
   private _renderYears(years: string[]): void {
@@ -78,14 +83,7 @@ export default class YearSelector {
     const year = target.dataset.year;
     if (!year || this.currentYear === year) return;
 
-    this.currentYear = year;
-
-    if (this.container) {
-      this.container.querySelectorAll(".year-item").forEach((el) => {
-        el.classList.remove("active");
-      });
-      target.classList.add("active");
-    }
+    this.setActiveYear(year);
 
     if (this.onYearChange) {
       this.onYearChange(year);

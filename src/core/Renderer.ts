@@ -1,13 +1,13 @@
 import ParticleSystem from "./ParticleSystem";
-import type { BannerDetail, MediaLayer, ParticleLayer } from "./types";
+import type { BannerConfig, MediaLayer, ParticleLayer } from "./types";
 
 export interface BaseRenderer {
-  render(container: HTMLElement, detail: BannerDetail): void;
+  render(container: HTMLElement, bannerConfig?: BannerConfig): void;
   dispose(): void;
 }
 
 export class LoadingRenderer implements BaseRenderer {
-  public render(container: HTMLElement, _detail: BannerDetail): void {
+  public render(container: HTMLElement): void {
     container.innerHTML = "";
   }
 
@@ -15,7 +15,7 @@ export class LoadingRenderer implements BaseRenderer {
 }
 
 export class FailedRenderer implements BaseRenderer {
-  public render(container: HTMLElement, _detail: BannerDetail): void {
+  public render(container: HTMLElement): void {
     container.innerHTML = "";
   }
 
@@ -26,8 +26,10 @@ export class SingleVideoRenderer implements BaseRenderer {
   private wrapper: HTMLElement | null = null;
   private video: HTMLVideoElement | null = null;
 
-  public render(container: HTMLElement, detail: BannerDetail): void {
-    const singleVideoItem = detail.layers.find(
+  public render(container: HTMLElement, bannerConfig?: BannerConfig): void {
+    if (!bannerConfig) return;
+
+    const singleVideoItem = bannerConfig.layers.find(
       (item): item is MediaLayer => item.type === "video",
     );
     if (!singleVideoItem) return;
@@ -65,8 +67,10 @@ export class SingleImageRenderer implements BaseRenderer {
   private wrapper: HTMLElement | null = null;
   private img: HTMLImageElement | null = null;
 
-  public render(container: HTMLElement, detail: BannerDetail): void {
-    const singleImageItem = detail.layers.find(
+  public render(container: HTMLElement, bannerConfig?: BannerConfig): void {
+    if (!bannerConfig) return;
+
+    const singleImageItem = bannerConfig.layers.find(
       (item): item is MediaLayer => item.type === "img",
     );
     if (!singleImageItem) return;
@@ -144,7 +148,9 @@ export class ParallaxRenderer implements BaseRenderer {
     this._resetPosition = this._resetPositionInternal.bind(this);
   }
 
-  public render(container: HTMLElement, detail: BannerDetail): void {
+  public render(container: HTMLElement, bannerConfig?: BannerConfig): void {
+    if (!bannerConfig) return;
+
     this.dispose();
     this.bannerContainer = container;
 
@@ -156,12 +162,12 @@ export class ParallaxRenderer implements BaseRenderer {
 
     this._updateViewCompensation();
 
-    const motionLayers = detail.layers.filter(
+    const motionLayers = bannerConfig.layers.filter(
       (item): item is MediaLayer =>
         item.type === "img" || item.type === "video",
     );
     const particleConfig =
-      detail.layers.find(
+      bannerConfig.layers.find(
         (item): item is ParticleLayer => item.type === "particle",
       ) || null;
 
@@ -171,7 +177,13 @@ export class ParallaxRenderer implements BaseRenderer {
     if (particleConfig && this.bannerContainer && this._particleCanvas) {
       const ps = new ParticleSystem(this._particleCanvas, particleConfig);
       this._particleSystem = ps;
-      ps.start();
+      void ps.start().catch((e) => {
+        console.error("[ParallaxRenderer] 粒子层初始化失败，已降级跳过。", e);
+        if (this._particleSystem === ps) {
+          this._particleSystem.dispose();
+          this._particleSystem = null;
+        }
+      });
     }
   }
 

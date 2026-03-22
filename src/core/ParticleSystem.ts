@@ -82,7 +82,25 @@ export default class ParticleSystem {
           img.src = import.meta.env.BASE_URL + src.replace(/^\//, "");
         }),
     );
-    this.images = await Promise.all(loads);
+    const results = await Promise.allSettled(loads);
+
+    this.images = results
+      .filter(
+        (result): result is PromiseFulfilledResult<HTMLImageElement> =>
+          result.status === "fulfilled",
+      )
+      .map((result) => result.value);
+
+    const failedCount = results.length - this.images.length;
+    if (failedCount > 0) {
+      console.error(
+        `[ParticleSystem] ${failedCount} 个粒子资源加载失败，将跳过这些资源。`,
+      );
+    }
+
+    if (this.images.length === 0) {
+      throw new Error("[ParticleSystem] 没有可用的粒子资源");
+    }
   }
 
   private _initParticles(): void {

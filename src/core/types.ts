@@ -37,32 +37,23 @@ export type Layers = Array<MediaLayer | ParticleLayer>;
 
 // ─────────────────────── 数据加载器相关 ───────────────────────
 
-interface ManifestConfig {
+export interface BannerRef {
   name: string;
-  path?: string;
+  path: string;
 }
 
-export interface BannerManifestEntry {
-  date: string;
-  configs: ManifestConfig[];
-}
-
-export type BannerState = "loading" | "success" | "failed";
 export type BannerType =
   | "single-image"
   | "single-video"
   | "multi-layer"
   | "unknown";
 
-export interface BannerDetail {
-  name: string;
-  path: string;
+export interface BannerConfig extends BannerRef {
   type: BannerType;
-  state: BannerState;
   layers: Layers;
 }
 
-export interface DailyBannerDetail {
+export interface DailyBannerGroup {
   date: string;
-  banners: BannerDetail[];
+  refs: BannerRef[];
 }
