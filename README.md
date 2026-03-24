@@ -1,6 +1,6 @@
 # bilibili-banner 仿 B 站首页动态头图
 
-基于 [palxiao/bilibili-banner](https://github.com/palxiao/bilibili-banner) 重构，使用 TypeScript + Vite 完全重写，高度还原 B 站动态 Banner 及交互效果。本项目长期收集并汇总了自 2020 年起 B 站首页的大部分动态 Banner
+基于 [palxiao/bilibili-banner](https://github.com/palxiao/bilibili-banner) 重构，使用 TypeScript + Vite 完全重写，高度还原 B 站 Banner 及交互效果（自 2020 年起）
 
 ---
 
@@ -55,7 +55,7 @@ pnpm grab -u https://web.archive.org/web/20241226082416/https://www.bilibili.com
 ## ⚙️ 进阶参数微调
 
 > [!NOTE]
-> 自动化脚本可完成动态图层所需的大部分参数计算。但早期 B 站实现雪花等粒子效果时使用的是 Canvas 渲染，此类图层需要手动添加粒子配置（近期 Banner 改用 WebM 视频实现渲染）
+> 自动化脚本可完成动态图层所需的大部分参数计算。但早期 B 站实现雪花等粒子效果时使用的是 Canvas 渲染，此类图层需要手动抓取资源并添加粒子层配置（目前类似的效果多改用 WebM 视频实现）
 >
 > 此外，若自动抓取的参数效果与实际存在偏差，亦可参照下方说明进行手动微调
 
