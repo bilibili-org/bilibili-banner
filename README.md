@@ -8,7 +8,7 @@
 
 ![cover](docs/image/cover.png)
 
-## 🛠️ 快速开始
+## 📥 数据抓取指南
 
 ### 1. 安装依赖
 
@@ -18,21 +18,15 @@ pnpm install
 
 ### 2. 环境配置
 
-抓取工具依赖 Puppeteer。您必须在项目根目录下创建 `.env` 文件并指定 Chrome 系浏览器可执行文件路径
+自动化抓取脚本依赖 Puppeteer，您必须在项目根目录下创建 `.env` 文件并指定 **Chrome 系浏览器**的可执行文件路径
 
 ```env
 PUPPETEER_EXECUTABLE_PATH=X:\path\to\chrome.exe
 ```
 
-### 3. 本地预览
+### 3. 获取数据
 
-```bash
-pnpm dev
-```
-
-## 📥 数据抓取指南
-
-### 抓取最新 Banner
+#### 🔹 抓取 B 站最新 Banner
 
 实时获取 B 站官网当天的 Banner 数据，会自动在 `public/assets` 目录下生成日期命名的文件夹
 
@@ -40,7 +34,7 @@ pnpm dev
 pnpm grab
 ```
 
-### 抓取往期 Banner
+#### 🔹 抓取往期 Banner
 
 如果错过了某天的 Banner，可以通过 [Wayback Machine](https://web.archive.org/) 网站获取历史快照数据
 
@@ -52,6 +46,12 @@ pnpm grab -u https://web.archive.org/web/20241226082416/https://www.bilibili.com
 
 - `-u`：Wayback Machine 完整快照 URL
 
+### 4. 本地预览
+
+```bash
+pnpm dev
+```
+
 ## ⚙️ 进阶参数微调
 
 > [!NOTE]
@@ -62,7 +62,7 @@ pnpm grab -u https://web.archive.org/web/20241226082416/https://www.bilibili.com
 Banner 配置文件路径：`public/assets/{YYYY-MM-DD[...]}/data.json`（文件夹通常以日期开头，并可能带有描述性后缀），找到对应目录下的 `data.json` 文件进行调整
 
 <details>
-<summary><b>动态图层 (MotionLayer) 配置说明</b></summary>
+<summary><b>动态图层 (MediaLayer) 配置说明</b></summary>
 
 | 属性            | 类型     | 说明                                               |
 | :-------------- | :------- | :------------------------------------------------- |
