@@ -121,6 +121,7 @@ export class ParallaxRenderer implements BaseRenderer {
   private layersExtra: MotionLayerExtra[] = [];
   private layers: NodeListOf<HTMLElement> | null = null;
   private viewCompensation: number = 1;
+  private hasParticle: boolean = false;
 
   private _particleSystem: ParticleSystem | null = null;
   private _particleCanvas: HTMLCanvasElement | null = null;
@@ -170,6 +171,8 @@ export class ParallaxRenderer implements BaseRenderer {
       bannerConfig.layers.find(
         (item): item is ParticleLayer => item.type === "particle",
       ) || null;
+
+    this.hasParticle = !!particleConfig;
 
     this._initParallaxData(motionLayers);
     this._renderParallax();
@@ -329,12 +332,14 @@ export class ParallaxRenderer implements BaseRenderer {
       this.bannerContainer.appendChild(fragment);
       this.layers = this.bannerContainer.querySelectorAll(".layer");
 
-      const canvas = document.createElement("canvas");
-      canvas.width = this.bannerContainer.clientWidth;
-      canvas.height = this.bannerContainer.clientHeight;
-      canvas.className = "particle-canvas";
-      this.bannerContainer.appendChild(canvas);
-      this._particleCanvas = canvas;
+      if (this.hasParticle) {
+        const canvas = document.createElement("canvas");
+        canvas.width = this.bannerContainer.clientWidth;
+        canvas.height = this.bannerContainer.clientHeight;
+        canvas.className = "particle-canvas";
+        this.bannerContainer.appendChild(canvas);
+        this._particleCanvas = canvas;
+      }
     }
   }
 
