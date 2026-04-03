@@ -100,6 +100,14 @@ function publishDataDir(stagedDir: string, targetDir: string): void {
   }
 }
 
+/**
+ * 移除 Bilibili BFS 资源的动态处理后缀 (如 @1c.webp, @200w_150h.webp 等)
+ * 以获取原始资源链接
+ */
+function cleanUrl(url: string): string {
+  return url.split("@")[0];
+}
+
 // ─────────────────────── Puppeteer Functions ───────────────────────
 
 async function initBrowser(): Promise<{ browser: Browser; page: Page }> {
@@ -216,7 +224,7 @@ function buildAssetDownloadTasks(
 
   for (const item of data) {
     if (item.src) {
-      const sourceUrl = item.src;
+      const sourceUrl = cleanUrl(item.src);
       const fileName = sourceUrl.split("/").pop()?.split("?")[0] || "unknown";
       const existingSource = fileSourceMap.get(fileName);
 
