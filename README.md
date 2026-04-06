@@ -49,7 +49,7 @@ pnpm grab -m v1
 - `-m`：**必选参数**。指定抓取模式，当前支持 `v1` 和 `v2`
   - `v1`：通过 Puppeteer 模拟鼠标交互，反推出 Banner 的运动参数
   - `v2`：直接解析首页 HTML 内嵌的 Banner 图层配置
-- `-u`：**可选参数**。Wayback Machine 完整快照 URL；未提供时默认抓取当前日期的官网数据
+- `-u`：**可选参数**。指定 Wayback Machine 完整快照 URL；未提供时默认抓取当前日期的官网数据
 
 > [!NOTE]
 > `v1` 模式依赖 Puppeteer，因此需要在项目根目录提供 `.env` 并配置 `PUPPETEER_EXECUTABLE_PATH` 环境变量：
