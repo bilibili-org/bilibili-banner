@@ -1,0 +1,10 @@
+{
+  "type": "single-video",
+  "version": 1,
+  "layers": [
+    {
+      "type": "video",
+      "src": "assets/2023-12-30/7a9f7ddb6dcde16031b89a3ec7d7e806aa8eeba9.webm"
+    }
+  ]
+}

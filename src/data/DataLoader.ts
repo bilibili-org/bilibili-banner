@@ -1,10 +1,10 @@
 import type {
   BannerConfig,
   BannerRef,
-  Layers,
+  LayersV1,
   MediaLayer,
   ParticleLayer,
-} from "./types";
+} from "../types";
 
 export class BannerLoader {
   private bannerCache: Map<string, BannerConfig> = new Map();
@@ -30,19 +30,32 @@ async function parseBannerData(ref: BannerRef): Promise<BannerConfig> {
   const res = await fetch(url);
   const rawData = await res.json();
 
-  return {
-    ...ref,
-    type: rawData.type,
-    layers: parseLayerData(rawData.layers),
-  };
-}
-
-function parseLayerData(rawData: unknown): Layers {
-  if (!Array.isArray(rawData)) {
-    throw new Error("[BannerDataLoader] 数据格式错误: 期望数组类型层配置");
+  if (Number(rawData.version) === 2) {
+    return {
+      ...ref,
+      version: 2,
+      layers: rawData.layers,
+    };
+  } else if (Number(rawData.version) === 1) {
+    return {
+      ...ref,
+      version: 1,
+      type: rawData.type,
+      layers: parseLayerData(rawData.layers),
+    };
   }
 
-  const layers: Layers = [];
+  throw new Error(
+    `[BannerDataLoader] 数据格式错误，发现未知版本: ${rawData.version}`,
+  );
+}
+
+function parseLayerData(rawData: unknown): LayersV1 {
+  if (!Array.isArray(rawData)) {
+    throw new Error("[BannerDataLoader] 数据格式错误");
+  }
+
+  const layers: LayersV1 = [];
   for (const item of rawData) {
     switch (item.type) {
       case "particle":
@@ -53,7 +66,7 @@ function parseLayerData(rawData: unknown): Layers {
         layers.push(item as MediaLayer);
         break;
       default:
-        throw new Error(`[BannerDataLoader] 未知类型数据: ${item.type}`);
+        throw new Error(`[BannerDataLoader] 未知图层类型: ${item.type}`);
     }
   }
 

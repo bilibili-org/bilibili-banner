@@ -1,4 +1,4 @@
-import type { BannerRef, DailyBannerGroup } from "../core/types";
+import type { BannerRef, DailyBannerGroup } from "../types";
 
 export interface BannerTimeLineOptions {
   containerId?: string;

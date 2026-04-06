@@ -1,103 +1,7 @@
+import type { BannerConfigV1, MediaLayer, ParticleLayer } from "../types";
+import type { BaseRenderer } from "./BaseRenderer";
+import { releaseVideoElement } from "./helper";
 import ParticleSystem from "./ParticleSystem";
-import type { BannerConfig, MediaLayer, ParticleLayer } from "./types";
-
-export interface BaseRenderer {
-  render(container: HTMLElement, bannerConfig?: BannerConfig): void;
-  dispose(): void;
-}
-
-export class LoadingRenderer implements BaseRenderer {
-  public render(container: HTMLElement): void {
-    container.innerHTML = "";
-  }
-
-  public dispose(): void {}
-}
-
-export class FailedRenderer implements BaseRenderer {
-  public render(container: HTMLElement): void {
-    container.innerHTML = "";
-  }
-
-  public dispose(): void {}
-}
-
-export class SingleVideoRenderer implements BaseRenderer {
-  private wrapper: HTMLElement | null = null;
-  private video: HTMLVideoElement | null = null;
-
-  public render(container: HTMLElement, bannerConfig?: BannerConfig): void {
-    if (!bannerConfig) return;
-
-    const singleVideoItem = bannerConfig.layers.find(
-      (item): item is MediaLayer => item.type === "video",
-    );
-    if (!singleVideoItem) return;
-
-    this.wrapper = document.createElement("div");
-    this.wrapper.className = "single-video-container";
-
-    this.video = document.createElement("video");
-    this.video.src =
-      import.meta.env.BASE_URL + singleVideoItem.src.replace(/^\//, "");
-    this.video.loop = true;
-    this.video.autoplay = true;
-    this.video.muted = true;
-    this.video.playsInline = true;
-
-    this.wrapper.appendChild(this.video);
-    container.innerHTML = "";
-    container.appendChild(this.wrapper);
-  }
-
-  public dispose(): void {
-    if (this.video) {
-      this.video.pause();
-      this.video.removeAttribute("src");
-      this.video = null;
-    }
-    if (this.wrapper) {
-      this.wrapper.remove();
-      this.wrapper = null;
-    }
-  }
-}
-
-export class SingleImageRenderer implements BaseRenderer {
-  private wrapper: HTMLElement | null = null;
-  private img: HTMLImageElement | null = null;
-
-  public render(container: HTMLElement, bannerConfig?: BannerConfig): void {
-    if (!bannerConfig) return;
-
-    const singleImageItem = bannerConfig.layers.find(
-      (item): item is MediaLayer => item.type === "img",
-    );
-    if (!singleImageItem) return;
-
-    this.wrapper = document.createElement("div");
-    this.wrapper.className = "single-image-container";
-
-    this.img = document.createElement("img");
-    this.img.src =
-      import.meta.env.BASE_URL + singleImageItem.src.replace(/^\//, "");
-
-    this.wrapper.appendChild(this.img);
-    container.innerHTML = "";
-    container.appendChild(this.wrapper);
-  }
-
-  public dispose(): void {
-    if (this.img) {
-      this.img.removeAttribute("src");
-      this.img = null;
-    }
-    if (this.wrapper) {
-      this.wrapper.remove();
-      this.wrapper = null;
-    }
-  }
-}
 
 interface ParallaxState {
   initX: number;
@@ -149,7 +53,7 @@ export class ParallaxRenderer implements BaseRenderer {
     this._resetPosition = this._resetPositionInternal.bind(this);
   }
 
-  public render(container: HTMLElement, bannerConfig?: BannerConfig): void {
+  public render(container: HTMLElement, bannerConfig?: BannerConfigV1): void {
     if (!bannerConfig) return;
 
     this.dispose();
@@ -197,10 +101,22 @@ export class ParallaxRenderer implements BaseRenderer {
     }
   }
 
+  private _getContainerWidth(): number {
+    const containerWidth = this.bannerContainer?.clientWidth ?? 0;
+    return containerWidth > 0
+      ? containerWidth
+      : ParallaxRenderer.DEFAULT_SCREEN_WIDTH;
+  }
+
+  private _getMotionRatio(moveX: number): number {
+    return Math.min(Math.abs((moveX / this._getContainerWidth()) * 2), 1);
+  }
+
   private _updateViewCompensation(): void {
+    const containerWidth = this._getContainerWidth();
     this.viewCompensation =
-      window.innerWidth > ParallaxRenderer.DEFAULT_SCREEN_WIDTH
-        ? window.innerWidth / ParallaxRenderer.DEFAULT_SCREEN_WIDTH
+      containerWidth > ParallaxRenderer.DEFAULT_SCREEN_WIDTH
+        ? containerWidth / ParallaxRenderer.DEFAULT_SCREEN_WIDTH
         : 1;
   }
 
@@ -208,8 +124,7 @@ export class ParallaxRenderer implements BaseRenderer {
     if (this.bannerContainer) {
       const videos = this.bannerContainer.querySelectorAll("video");
       videos.forEach((video) => {
-        video.pause();
-        video.removeAttribute("src");
+        releaseVideoElement(video);
       });
     }
   }
@@ -388,10 +303,7 @@ export class ParallaxRenderer implements BaseRenderer {
         const opLeft = item.opacity[1];
         const opRight = item.opacity[2];
 
-        const ratio = Math.min(
-          Math.abs((currentMoveX / window.innerWidth) * 2),
-          1,
-        );
+        const ratio = this._getMotionRatio(currentMoveX);
         const targetOpacity =
           currentMoveX < 0
             ? this._lerp(opDef, opLeft, ratio)
@@ -410,10 +322,7 @@ export class ParallaxRenderer implements BaseRenderer {
         const blurLeft = item.blur[1];
         const blurRight = item.blur[2];
 
-        const ratio = Math.min(
-          Math.abs((currentMoveX / window.innerWidth) * 2),
-          1,
-        );
+        const ratio = this._getMotionRatio(currentMoveX);
         const targetBlur =
           currentMoveX < 0
             ? this._lerp(blurDef, blurLeft, ratio)

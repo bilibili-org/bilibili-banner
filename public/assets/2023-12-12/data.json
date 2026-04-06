@@ -1,194 +1,430 @@
 {
-  "type": "multi-layer",
+  "version": 2,
   "layers": [
     {
-      "type": "img",
-      "src": "assets/2023-12-12/cb5b4ca963e3a1a6d3917182561844b24a05fc20.png",
-      "width": 2304,
-      "height": 216,
-      "transform": [1, 0, 0, 1, 0, 0],
-      "xSpeed": 0,
-      "opacity": [1, 1, 1]
+      "resources": [
+        {
+          "src": "assets/2023-12-12/cb5b4ca963e3a1a6d3917182561844b24a05fc20.png",
+          "id": 0
+        }
+      ],
+      "scale": {
+        "initial": 1.2
+      },
+      "rotate": {},
+      "translate": {},
+      "blur": {},
+      "opacity": {
+        "wrap": "clamp"
+      },
+      "id": 0,
+      "name": "19天空"
     },
     {
-      "type": "img",
-      "src": "assets/2023-12-12/bad95b1085650b58108b3491c9c13e1ef4e6b41f.png",
-      "width": 1283,
-      "height": 211,
-      "transform": [1, 0, 0, 1, 0, 0],
-      "xSpeed": 0.00145455,
-      "opacity": [1, 1, 1]
+      "resources": [
+        {
+          "src": "assets/2023-12-12/bad95b1085650b58108b3491c9c13e1ef4e6b41f.png",
+          "id": 0
+        }
+      ],
+      "scale": {
+        "initial": 1.2
+      },
+      "rotate": {},
+      "translate": {
+        "offset": [2, 0]
+      },
+      "blur": {},
+      "opacity": {
+        "wrap": "clamp"
+      },
+      "id": 1,
+      "name": "19天空"
     },
     {
-      "type": "img",
-      "src": "assets/2023-12-12/b28b35a71a658e8bc449cd570337d7d9662d07d7.png",
-      "width": 1687,
-      "height": 173,
-      "transform": [1, 0, 0, 1, 0, 0],
-      "xSpeed": 0.00727273,
-      "opacity": [1, 1, 1]
+      "resources": [
+        {
+          "src": "assets/2023-12-12/b28b35a71a658e8bc449cd570337d7d9662d07d7.png",
+          "id": 0
+        }
+      ],
+      "scale": {},
+      "rotate": {},
+      "translate": {
+        "offset": [12, 0]
+      },
+      "blur": {},
+      "opacity": {
+        "wrap": "clamp"
+      },
+      "id": 2,
+      "name": "17极光"
     },
     {
-      "type": "img",
-      "src": "assets/2023-12-12/596c782fe6636269c65a50a9188fd4d16d12a83e.png",
-      "width": 1920,
-      "height": 160,
-      "transform": [1, 0, 0, 1, 0, 10],
-      "xSpeed": 0,
-      "opacity": [1, 1, 1]
+      "resources": [
+        {
+          "src": "assets/2023-12-12/596c782fe6636269c65a50a9188fd4d16d12a83e.png",
+          "id": 0
+        }
+      ],
+      "scale": {},
+      "rotate": {},
+      "translate": {
+        "initial": [0, 10]
+      },
+      "blur": {},
+      "opacity": {
+        "wrap": "clamp"
+      },
+      "id": 3,
+      "name": "16背景山"
     },
     {
-      "type": "img",
-      "src": "assets/2023-12-12/4cbfd5b2c00e1abb157e9ca3e79380bfa40d2b26.png",
-      "width": 1920,
-      "height": 83,
-      "transform": [1, 0, 0, 1, 0, 55],
-      "xSpeed": 0.060606099999999996,
-      "opacity": [1, 1, 1]
+      "resources": [
+        {
+          "src": "assets/2023-12-12/4cbfd5b2c00e1abb157e9ca3e79380bfa40d2b26.png",
+          "id": 0
+        }
+      ],
+      "scale": {},
+      "rotate": {},
+      "translate": {
+        "initial": [0, 55],
+        "offset": [100, 0]
+      },
+      "blur": {},
+      "opacity": {
+        "wrap": "clamp"
+      },
+      "id": 4,
+      "name": "15冰面"
     },
     {
-      "type": "img",
-      "src": "assets/2023-12-12/6b8bf544dec0088423136771f01696c68112a145.png",
-      "width": 1920,
-      "height": 111,
-      "transform": [1, 0, 0, 1, 0, 40],
-      "xSpeed": 0.0121212,
-      "opacity": [1, 1, 1]
+      "resources": [
+        {
+          "src": "assets/2023-12-12/6b8bf544dec0088423136771f01696c68112a145.png",
+          "id": 0
+        }
+      ],
+      "scale": {},
+      "rotate": {},
+      "translate": {
+        "initial": [0, 40],
+        "offset": [20, 0]
+      },
+      "blur": {},
+      "opacity": {
+        "wrap": "clamp"
+      },
+      "id": 5,
+      "name": "14中景"
     },
     {
-      "type": "img",
-      "src": "assets/2023-12-12/cd6dadba219330bf44d3f8bcb584aede77d37f79.png",
-      "width": 713,
-      "height": 106,
-      "transform": [1, 0, 0, 1, -250, -10],
-      "xSpeed": 0.03636400000000001,
-      "opacity": [1, 1, 1]
+      "resources": [
+        {
+          "src": "assets/2023-12-12/cd6dadba219330bf44d3f8bcb584aede77d37f79.png",
+          "id": 0
+        }
+      ],
+      "scale": {},
+      "rotate": {},
+      "translate": {
+        "initial": [-250, -10],
+        "offset": [60, 0]
+      },
+      "blur": {},
+      "opacity": {
+        "wrap": "clamp"
+      },
+      "id": 6,
+      "name": "13树"
     },
     {
-      "type": "img",
-      "src": "assets/2023-12-12/31ff321fe1c2b003ab5c42beebb07f6c1652f66e.png",
-      "width": 53,
-      "height": 47,
-      "transform": [1, 0, 0, 1, 300, 25],
-      "xSpeed": -0.04545500000000001,
-      "opacity": [1, 1, 1]
+      "resources": [
+        {
+          "src": "assets/2023-12-12/31ff321fe1c2b003ab5c42beebb07f6c1652f66e.png",
+          "id": 0
+        }
+      ],
+      "scale": {
+        "initial": 0.5
+      },
+      "rotate": {},
+      "translate": {
+        "initial": [600, 50],
+        "offset": [-150, 0]
+      },
+      "blur": {},
+      "opacity": {
+        "wrap": "clamp"
+      },
+      "id": 11,
+      "name": "08狐狸"
     },
     {
-      "type": "img",
-      "src": "assets/2023-12-12/cfb54458ad3e2101d245f3434222e33453825f4e.png",
-      "width": 260,
-      "height": 80,
-      "transform": [1, 0, 0, 1, 130, 20],
-      "xSpeed": 0.042424,
-      "opacity": [1, 1, 1]
+      "resources": [
+        {
+          "src": "assets/2023-12-12/cfb54458ad3e2101d245f3434222e33453825f4e.png",
+          "id": 0
+        }
+      ],
+      "scale": {},
+      "rotate": {},
+      "translate": {
+        "initial": [130, 20],
+        "offset": [70, 0]
+      },
+      "blur": {},
+      "opacity": {
+        "wrap": "clamp"
+      },
+      "id": 7,
+      "name": "12中间房子+雪人"
     },
     {
-      "type": "img",
-      "src": "assets/2023-12-12/5103762686dc9627619b028354c15ba2a72b0886.png",
-      "width": 70,
-      "height": 61,
-      "transform": [1, 0, 0, 1, -320, 20],
-      "xSpeed": 0.06060599999999999,
-      "opacity": [1, 1, 1]
+      "resources": [
+        {
+          "src": "assets/2023-12-12/5103762686dc9627619b028354c15ba2a72b0886.png",
+          "id": 0
+        }
+      ],
+      "scale": {},
+      "rotate": {},
+      "translate": {
+        "initial": [-320, 20],
+        "offset": [100, 0]
+      },
+      "blur": {},
+      "opacity": {
+        "wrap": "clamp"
+      },
+      "id": 10,
+      "name": "10大鹅"
     },
     {
-      "type": "img",
-      "src": "assets/2023-12-12/09fa68c0c716596cebf6b1f81ed69a2a7a0a8c89.png",
-      "width": 83,
-      "height": 94,
-      "transform": [1, 0, 0, 1, -180, 18],
-      "xSpeed": 0.065455,
-      "opacity": [1, 1, 1]
+      "resources": [
+        {
+          "src": "assets/2023-12-12/09fa68c0c716596cebf6b1f81ed69a2a7a0a8c89.png",
+          "id": 0
+        }
+      ],
+      "scale": {
+        "initial": 0.9
+      },
+      "rotate": {},
+      "translate": {
+        "initial": [-200, 20],
+        "offset": [120, 0]
+      },
+      "blur": {},
+      "opacity": {
+        "wrap": "clamp"
+      },
+      "id": 9,
+      "name": "0933"
     },
     {
-      "type": "img",
-      "src": "assets/2023-12-12/c2914ea86a54203e59b9b9fb1b8ab3461a5976ed.png",
-      "width": 341,
-      "height": 127,
-      "transform": [1, 0, 0, 1, 75, 19],
-      "xSpeed": 0.09090899999999999,
-      "opacity": [1, 1, 1]
+      "resources": [
+        {
+          "src": "assets/2023-12-12/c2914ea86a54203e59b9b9fb1b8ab3461a5976ed.png",
+          "id": 0
+        }
+      ],
+      "scale": {},
+      "rotate": {},
+      "translate": {
+        "initial": [75, 19],
+        "offset": [150, 0]
+      },
+      "blur": {},
+      "opacity": {
+        "wrap": "clamp"
+      },
+      "id": 8,
+      "name": "1122"
     },
     {
-      "type": "img",
-      "src": "assets/2023-12-12/0cea6143cb8fce3ac55c0e1888a889c906a976aa.png",
-      "width": 833,
-      "height": 118,
-      "transform": [1, 0, 0, 1, -720, 48],
-      "xSpeed": 0.14545500000000003,
-      "opacity": [1, 1, 1]
+      "resources": [
+        {
+          "src": "assets/2023-12-12/0cea6143cb8fce3ac55c0e1888a889c906a976aa.png",
+          "id": 0
+        }
+      ],
+      "scale": {
+        "initial": 1.2
+      },
+      "rotate": {},
+      "translate": {
+        "initial": [-600, 40],
+        "offset": [200, 0]
+      },
+      "blur": {},
+      "opacity": {
+        "wrap": "clamp"
+      },
+      "id": 12,
+      "name": "07左地面"
     },
     {
-      "type": "img",
-      "src": "assets/2023-12-12/c7cb3d67462676f79b3e702db60f4d4b038f3f28.png",
-      "width": 340,
-      "height": 174,
-      "transform": [1, 0, 0, 1, -600, -5],
-      "xSpeed": 0.24242399999999997,
-      "opacity": [1, 1, 1]
+      "resources": [
+        {
+          "src": "assets/2023-12-12/c7cb3d67462676f79b3e702db60f4d4b038f3f28.png",
+          "id": 0
+        }
+      ],
+      "scale": {},
+      "rotate": {},
+      "translate": {
+        "initial": [-600, -5],
+        "offset": [400, 0]
+      },
+      "blur": {},
+      "opacity": {
+        "wrap": "clamp"
+      },
+      "id": 13,
+      "name": "04冰屋"
     },
     {
-      "type": "img",
-      "src": "assets/2023-12-12/459fbeaaff1fbeced05ac36f1cb0c0c70df3ff01.png",
-      "width": 454,
-      "height": 180,
-      "transform": [1, 0, 0, 1, -850, 0],
-      "xSpeed": 0.30302999999999997,
-      "opacity": [1, 1, 1]
+      "resources": [
+        {
+          "src": "assets/2023-12-12/459fbeaaff1fbeced05ac36f1cb0c0c70df3ff01.png",
+          "id": 0
+        }
+      ],
+      "scale": {},
+      "rotate": {},
+      "translate": {
+        "initial": [-850, 0],
+        "offset": [500, 0]
+      },
+      "blur": {},
+      "opacity": {
+        "wrap": "clamp"
+      },
+      "id": 14,
+      "name": "02左树"
     },
     {
-      "type": "img",
-      "src": "assets/2023-12-12/bba2f3520bedef31ef33a816f11a9d22487b80aa.png",
-      "width": 422,
-      "height": 74,
-      "transform": [1, 0, 0, 1, -1200, 55],
-      "xSpeed": 0.42424199999999995,
-      "opacity": [1, 1, 1]
+      "resources": [
+        {
+          "src": "assets/2023-12-12/bba2f3520bedef31ef33a816f11a9d22487b80aa.png",
+          "id": 0
+        }
+      ],
+      "scale": {},
+      "rotate": {},
+      "translate": {
+        "initial": [-1200, 55],
+        "offset": [700, 0]
+      },
+      "blur": {},
+      "opacity": {
+        "wrap": "clamp"
+      },
+      "id": 15,
+      "name": "01左前植物"
     },
     {
-      "type": "img",
-      "src": "assets/2023-12-12/7c2d36bba37320de03c417ed7d86111f7b05347e.png",
-      "width": 214,
-      "height": 118,
-      "transform": [1, 0, 0, 1, 450, 20],
-      "xSpeed": 0.30302999999999997,
-      "opacity": [1, 1, 1]
+      "resources": [
+        {
+          "src": "assets/2023-12-12/7c2d36bba37320de03c417ed7d86111f7b05347e.png",
+          "id": 0
+        }
+      ],
+      "scale": {},
+      "rotate": {},
+      "translate": {
+        "initial": [450, 20],
+        "offset": [500, 0]
+      },
+      "blur": {},
+      "opacity": {
+        "wrap": "clamp"
+      },
+      "id": 17,
+      "name": "06右边雪人"
     },
     {
-      "type": "img",
-      "src": "assets/2023-12-12/aa01bb2357ea84d7cc6cf3030769f2581a3ac98f.png",
-      "width": 126,
-      "height": 75,
-      "transform": [1, 0, 0, 1, 350, 50],
-      "xSpeed": 0.36363599999999996,
-      "opacity": [1, 1, 1]
+      "resources": [
+        {
+          "src": "assets/2023-12-12/aa01bb2357ea84d7cc6cf3030769f2581a3ac98f.png",
+          "id": 0
+        }
+      ],
+      "scale": {},
+      "rotate": {},
+      "translate": {
+        "initial": [350, 50],
+        "offset": [600, 0]
+      },
+      "blur": {},
+      "opacity": {
+        "wrap": "clamp"
+      },
+      "id": 18,
+      "name": "05萝卜兔子"
     },
     {
-      "type": "img",
-      "src": "assets/2023-12-12/89d1c8fb55797a064a4d4aca51be2ebb8d86643a.png",
-      "width": 367,
-      "height": 180,
-      "transform": [1, 0, 0, 1, 700, 0],
-      "xSpeed": 0.4848499999999999,
-      "opacity": [1, 1, 1]
+      "resources": [
+        {
+          "src": "assets/2023-12-12/89d1c8fb55797a064a4d4aca51be2ebb8d86643a.png",
+          "id": 0
+        }
+      ],
+      "scale": {},
+      "rotate": {},
+      "translate": {
+        "initial": [700, 0],
+        "offset": [800, 0]
+      },
+      "blur": {},
+      "opacity": {
+        "wrap": "clamp"
+      },
+      "id": 16,
+      "name": "03右树"
     },
     {
-      "type": "img",
-      "src": "assets/2023-12-12/bba2f3520bedef31ef33a816f11a9d22487b80aa.png",
-      "width": 422,
-      "height": 74,
-      "transform": [1, 0, 0, 1, 1200, 55],
-      "xSpeed": 0.5151500000000001,
-      "opacity": [1, 1, 1]
+      "resources": [
+        {
+          "src": "assets/2023-12-12/bba2f3520bedef31ef33a816f11a9d22487b80aa.png",
+          "id": 0
+        }
+      ],
+      "scale": {},
+      "rotate": {},
+      "translate": {
+        "initial": [1200, 55],
+        "offset": [850, 0]
+      },
+      "blur": {},
+      "opacity": {
+        "wrap": "clamp"
+      },
+      "id": 20,
+      "name": "前树"
     },
     {
-      "type": "video",
-      "src": "assets/2023-12-12/55e90a11-9e7a-494a-93d6-ced3f0d352ed",
-      "width": 2112,
-      "height": 154,
-      "transform": [1, 0, 0, 1, 0, 0],
-      "xSpeed": 0.0333333,
-      "opacity": [1, 1, 1]
+      "resources": [
+        {
+          "src": "assets/2023-12-12/3b226df45a1d6af2cdfeb20b9963849e13356f3d.webm",
+          "id": 0
+        }
+      ],
+      "scale": {
+        "initial": 1.1
+      },
+      "rotate": {},
+      "translate": {
+        "offset": [50, 0]
+      },
+      "blur": {},
+      "opacity": {
+        "wrap": "clamp"
+      },
+      "id": 19,
+      "name": "下雪"
     }
   ]
 }

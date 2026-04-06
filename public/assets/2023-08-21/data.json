@@ -1,5 +1,6 @@
 {
   "type": "multi-layer",
+  "version": 1,
   "layers": [
     {
       "type": "img",

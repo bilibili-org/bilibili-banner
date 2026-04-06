@@ -1,4 +1,4 @@
-import type { ParticleLayer } from "./types";
+import type { ParticleLayer } from "../types";
 
 interface Particle {
   image: HTMLImageElement;

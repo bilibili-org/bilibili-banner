@@ -1,7 +1,7 @@
 import "./styles/index.css";
 import BannerEngine from "./core/BannerEngine";
-import type { DailyBannerGroup } from "./core/types";
 import BANNER_MANIFEST_JSON from "./data/banner.json";
+import type { DailyBannerGroup } from "./types";
 import BannerNavigation, {
   BANNER_NAV_SWITCH_EVENT,
   type BannerNavSwitchDetail,

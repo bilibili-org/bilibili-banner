@@ -1,5 +1,6 @@
 {
   "type": "single-video",
+  "version": 1,
   "layers": [
     {
       "type": "video",

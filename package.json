@@ -8,8 +8,8 @@
     "build": "vite build",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
-    "grab": "tsx --env-file=.env scripts/grab.ts",
-    "check": "biome check --write ."
+    "grab": "tsx --env-file=.env scripts/grab/index.ts",
+    "lint": "biome check --write ."
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.4",

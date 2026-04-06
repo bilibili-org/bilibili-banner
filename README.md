@@ -1,14 +1,13 @@
 # bilibili-banner 仿 B 站首页动态头图
 
-基于 [palxiao/bilibili-banner](https://github.com/palxiao/bilibili-banner) 重构，使用 TypeScript + Vite 完全重写，高度还原 B 站 Banner 及交互效果（自 2020 年起）
-
----
+基于 [palxiao/bilibili-banner](https://github.com/palxiao/bilibili-banner) 重构，使用 TypeScript + Vite 重新实现，尽可能准确地还原了 B 站首页 Banner 及其交互效果
 
 [🚀 在线预览](https://bilibili-org.github.io/bilibili-banner/)
 
-![cover](docs/image/cover.png)
+![cover-2021-04-12](docs/image/cover-2021-04-12.png)
+![cover-2026-01-09](docs/image/cover-2026-01-09.png)
 
-## 📥 数据抓取指南
+## 🛠️ 快速开始
 
 ### 1. 安装依赖
 
@@ -16,91 +15,52 @@
 pnpm install
 ```
 
-### 2. 环境配置
-
-自动化抓取脚本依赖 Puppeteer，您必须在项目根目录下创建 `.env` 文件并指定 **Chrome 系浏览器**的可执行文件路径
-
-```env
-PUPPETEER_EXECUTABLE_PATH=X:\path\to\chrome.exe
-```
-
-### 3. 获取数据
-
-#### 🔹 抓取 B 站最新 Banner
-
-实时获取 B 站官网当天的 Banner 数据，会自动在 `public/assets` 目录下生成日期命名的文件夹
-
-```bash
-pnpm grab
-```
-
-#### 🔹 抓取往期 Banner
-
-如果错过了某天的 Banner，可以通过 [Wayback Machine](https://web.archive.org/) 网站获取历史快照数据
-
-```bash
-pnpm grab -u https://web.archive.org/web/20241226082416/https://www.bilibili.com/
-```
-
-**参数说明**：
-
-- `-u`：Wayback Machine 完整快照 URL
-
-### 4. 本地预览
+### 2. 本地开发
 
 ```bash
 pnpm dev
 ```
 
-## ⚙️ 进阶参数微调
+### 3. 格式化与类型检查
+
+```bash
+pnpm lint
+pnpm typecheck
+```
+
+### 4. 构建与预览
+
+```bash
+pnpm build && pnpm preview
+```
+
+## 📥 数据抓取指南
+
+项目提供了 `grab` 自动化脚本，用于抓取 Banner 所需的图层资源和配置参数
+
+使用方式：
+
+```bash
+pnpm grab -m v1
+```
+
+参数说明：
+
+- `-m`：**必选参数**。指定抓取模式，当前支持 `v1` 和 `v2`
+  - `v1`：通过 Puppeteer 模拟鼠标交互，反推出 Banner 的运动参数
+  - `v2`：直接解析首页 HTML 内嵌的 Banner 图层配置
+- `-u`：**可选参数**。Wayback Machine 完整快照 URL；未提供时默认抓取当前日期的官网数据
 
 > [!NOTE]
-> 自动化脚本可完成动态图层所需的大部分参数计算。但早期 B 站实现雪花等粒子效果时使用的是 Canvas 渲染，此类图层需要手动抓取资源并添加粒子层配置（目前类似的效果多改用 WebM 视频实现）
+> `v1` 模式依赖 Puppeteer，因此需要在项目根目录提供 `.env` 并配置 `PUPPETEER_EXECUTABLE_PATH` 环境变量：
 >
-> 此外，若自动抓取的参数效果与实际存在偏差，亦可参照下方说明进行手动微调
+> ```env
+> PUPPETEER_EXECUTABLE_PATH=X:\path\to\chrome.exe
+> ```
+>
+> 如果需要了解抓取链路、参数微调方式，或 `v1 / v2` 的实现差异，请阅读 [scripts/README.md](scripts/README.md)。
 
-Banner 配置文件路径：`public/assets/{YYYY-MM-DD[...]}/data.json`（文件夹通常以日期开头，并可能带有描述性后缀），找到对应目录下的 `data.json` 文件进行调整
+## ❤️ 鸣谢
 
-<details>
-<summary><b>动态图层 (MediaLayer) 配置说明</b></summary>
-
-| 属性            | 类型     | 说明                                               |
-| :-------------- | :------- | :------------------------------------------------- |
-| **xSpeed**      | `number` | 水平偏移速度（正负影响位移方向）                   |
-| **ySpeed**      | `number` | 垂直偏移速度（正负影响位移方向）                   |
-| **scaleSpeed**  | `number` | 缩放速度，对应 `transform: scale` 的变换比例       |
-| **rotateSpeed** | `number` | 旋转速度（正负影响偏移角度）                       |
-| **opacity**     | `array`  | 透明度变化区间：`[默认值, 左移极限值, 右移极限值]` |
-| **blur**        | `array`  | 模糊度变化区间：`[默认值, 左移极限值, 右移极限值]` |
-
-</details>
-
-<details>
-<summary><b>Canvas 粒子图层 (ParticleLayer) 配置说明</b></summary>
-
-| 属性             | 类型               | 说明                                         |
-| :--------------- | :----------------- | :------------------------------------------- |
-| **type**         | `"particle"`       | 固定值，标识为粒子图层                       |
-| **srcs**         | `string[]`         | 粒子图片素材路径数组，会从中随机选择素材渲染 |
-| **count**        | `number`           | 粒子总数                                     |
-| **speedRange**   | `[number, number]` | 移动速度范围 `[最小, 最大]`                  |
-| **angleRange**   | `[number, number]` | 飘落角度范围（度）`[最小, 最大]`             |
-| **scaleRange**   | `[number, number]` | 缩放比例范围 `[最小, 最大]`                  |
-| **opacityRange** | `[number, number]` | 透明度范围 `[最小, 最大]`                    |
-
-</details>
-
-## 📚 项目开发历程
-
-> 以下文章由原作者 [Shawn Phang](https://github.com/palxiao) 撰写，详细记录了该项目的技术原理与实现过程
-
-- [复刻 Bilibili 首页头图的视差交互效果技术原理详解](https://juejin.cn/post/7269385060611997711)
-- [三分钟复刻B站首页动态Banner](https://juejin.cn/post/7288331623992688680)
-- [一键自动1比1复刻 B 站首页动态 Banner](https://juejin.cn/post/7295720738568159267)
-
-## 🤝 鸣谢
-
-- **原项目**：[palxiao/bilibili-banner](https://github.com/palxiao/bilibili-banner)
-- **部分素材来源**：[Wayback Machine](docs/README.md)
-
-最后，感谢 [Bilibili](https://www.bilibili.com) 设计师们带来的精美艺术作品❤️
+- 感谢 [Bilibili](https://www.bilibili.com) 设计师们带来的精美艺术作品
+- 原项目：[palxiao/bilibili-banner](https://github.com/palxiao/bilibili-banner)

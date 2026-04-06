@@ -1,4 +1,4 @@
-import type { BannerRef, DailyBannerGroup } from "../core/types";
+import type { BannerRef, DailyBannerGroup } from "../types";
 import BannerTimeLine from "./BannerTimeLine";
 import YearSelector from "./YearSelector";
 

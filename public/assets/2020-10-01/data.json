@@ -1,5 +1,6 @@
 {
   "type": "single-image",
+  "version": 1,
   "layers": [
     {
       "type": "img",

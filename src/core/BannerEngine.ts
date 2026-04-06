@@ -1,13 +1,14 @@
-import { BannerLoader } from "./DataLoader";
+import { BannerLoader } from "../data/DataLoader";
 import {
   type BaseRenderer,
   FailedRenderer,
   LoadingRenderer,
+  OfficialRenderer,
   ParallaxRenderer,
   SingleImageRenderer,
   SingleVideoRenderer,
-} from "./Renderer";
-import type { BannerConfig, BannerRef } from "./types";
+} from "../renderer";
+import type { BannerConfig, BannerRef } from "../types";
 
 type BannerViewState = "idle" | "loading" | "success" | "failed";
 
@@ -76,6 +77,11 @@ export default class BannerEngine {
 
     if (this.currentState === "success" && banner) {
       this._updateViewState("success");
+
+      if (banner.version === 2) {
+        return new OfficialRenderer();
+      }
+
       switch (banner.type) {
         case "single-image":
           return new SingleImageRenderer();
