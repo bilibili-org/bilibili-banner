@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+banner-*-schema.json
 
 # Build and Distribution
 dist/

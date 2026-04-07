@@ -29,6 +29,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Data validation
+        run: |
+          pnpm exec tsx scripts/manage-data.ts generate
+          pnpm exec tsx scripts/manage-data.ts validate
+
       - name: Build
         run: pnpm build
 
