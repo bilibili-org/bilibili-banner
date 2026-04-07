@@ -2,6 +2,7 @@ import type { Browser } from "puppeteer";
 import type { Args } from "../cli";
 import {
   createStagedDataDir,
+  dumpLayerConfig,
   prepareEmptyDir,
   publishGrabResult,
   removeDir,
@@ -9,10 +10,11 @@ import {
 import { initBrowser, loadPage, sleep } from "./browser";
 import {
   buildAssetDownloadCtx,
+  buildBannerData,
+  captureBannerMetrics,
   downloadAssets,
-  dumpLayerConfig,
   parseLayers,
-  scrapeMoveParams,
+  scrapeAndUpdateLayerParams,
 } from "./core";
 
 export async function runGrabV1(args: Args): Promise<boolean> {
@@ -45,10 +47,11 @@ export async function runGrabV1(args: Args): Promise<boolean> {
       targetDirName,
       stagedDataDir,
     );
-    await scrapeMoveParams(page, layerData);
+    const captureMetrics = await captureBannerMetrics(page);
+    await scrapeAndUpdateLayerParams(page, layerData);
 
     prepareEmptyDir(stagedDataDir);
-    dumpLayerConfig(layerData, stagedDataDir);
+    dumpLayerConfig(stagedDataDir, buildBannerData(layerData, captureMetrics));
 
     const downloadSummary = await downloadAssets(assetCtx, page);
     if (downloadSummary.failed.length > 0) {

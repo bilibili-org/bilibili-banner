@@ -91,3 +91,11 @@ export function publishGrabResult(date: string, stagedDir: string): void {
   publishDataDir(stagedDir, getPublishedDataDir(date));
   updateBannerManifest(date);
 }
+
+// biome-ignore lint/suspicious/noExplicitAny: the data can be any structure from the layer config
+export function dumpLayerConfig(dataDir: string, data: any): void {
+  const outputPath = path.join(dataDir, "data.json");
+
+  fs.writeFileSync(outputPath, JSON.stringify(data, null, 2));
+  console.log("已写入 data.json 配置文件");
+}

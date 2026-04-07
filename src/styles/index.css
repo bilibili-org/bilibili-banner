@@ -27,6 +27,9 @@ video {
   --bg-glass: rgba(255, 255, 255, 0.9);
   --border-glass: rgba(255, 255, 255, 0.4);
   --shadow-premium: 0 4px 15px 0 rgba(0, 0, 0, 0.05);
+  --banner-min-height: 155px;
+  --banner-fluid-height: 9.375vw;
+  --banner-max-height: 240px;
 }
 
 #app {
@@ -36,13 +39,15 @@ video {
   background-color: #f6f7f8;
 }
 
-/* Banner 容器（顶部固定高度） */
+/* Banner 容器 */
 #banner-container {
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
   width: 100%;
-  height: 160px;
+  min-height: var(--banner-min-height);
+  height: var(--banner-fluid-height);
+  max-height: var(--banner-max-height);
   background-color: #fff;
   contain: paint layout;
 }
@@ -336,7 +341,7 @@ video {
 .single-image-container img {
   flex-shrink: 0; /* 禁止缩小 */
   width: 100%; /* 撑满容器宽度 */
-  height: 160px; /* 固定高度与容器一致 */
+  height: 100%;
   object-fit: cover; /* 等比缩放铺满，超出部分由容器 overflow:hidden 截断 */
 }
 

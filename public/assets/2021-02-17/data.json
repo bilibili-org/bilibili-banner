@@ -1,6 +1,8 @@
 {
   "type": "multi-layer",
   "version": 1,
+  "captureViewportWidth": 1650,
+  "captureBannerHeight": 160,
   "layers": [
     {
       "type": "img",

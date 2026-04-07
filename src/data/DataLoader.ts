@@ -41,6 +41,8 @@ async function parseBannerData(ref: BannerRef): Promise<BannerConfig> {
       ...ref,
       version: 1,
       type: rawData.type,
+      captureBannerWidth: rawData.captureViewportWidth,
+      captureBannerHeight: rawData.captureBannerHeight,
       layers: parseLayerData(rawData.layers),
     };
   }

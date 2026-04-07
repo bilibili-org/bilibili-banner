@@ -35,6 +35,19 @@ interface LayerState {
   blur: number;
 }
 
+interface CaptureMetrics {
+  captureBannerWidth: number;
+  captureBannerHeight: number;
+}
+
+interface BannerData {
+  version: 1;
+  type: "multi-layer";
+  captureBannerWidth: number;
+  captureBannerHeight: number;
+  layers: LayersV1;
+}
+
 export async function parseLayers(page: Page): Promise<LayerConfig[]> {
   console.log("正在解析图层元数据...");
   const data: LayerConfig[] = [];
@@ -205,6 +218,20 @@ async function captureLayerStates(page: Page): Promise<LayerState[]> {
   return states;
 }
 
+async function getAnimatedBannerBox(page: Page) {
+  const element = await page.$(".animated-banner");
+  if (!element) {
+    throw new Error("未找到 .animated-banner");
+  }
+
+  const box = await element.boundingBox();
+  if (!box) {
+    throw new Error("无法获取 .animated-banner");
+  }
+
+  return box;
+}
+
 function calcXSpeed(
   layerMetadata: LayerConfig,
   left: LayerState,
@@ -343,20 +370,23 @@ function calcLayerParams(
   }
 }
 
-export async function scrapeMoveParams(
+export async function captureBannerMetrics(
+  page: Page,
+): Promise<CaptureMetrics> {
+  const box = await getAnimatedBannerBox(page);
+  const viewportWidth = page.viewport()?.width || DEFAULT_SCREEN_WIDTH;
+
+  return {
+    captureBannerWidth: viewportWidth,
+    captureBannerHeight: Number(box.height.toFixed(3)),
+  };
+}
+
+export async function scrapeAndUpdateLayerParams(
   page: Page,
   layerMetadatas: LayerConfig[],
 ): Promise<void> {
-  const element = await page.$(".animated-banner");
-  if (!element) {
-    return;
-  }
-
-  const box = await element.boundingBox();
-  if (!box) {
-    return;
-  }
-
+  const box = await getAnimatedBannerBox(page);
   const { x, y } = box;
   const viewportWidth = page.viewport()?.width || DEFAULT_SCREEN_WIDTH;
 
@@ -418,11 +448,10 @@ function sortObjectKeys(obj: any): any {
   return sortedObj;
 }
 
-export function dumpLayerConfig(
+export function buildBannerData(
   layerConfigs: LayerConfig[],
-  dataDir: string,
-): void {
-  const outputPath = path.join(dataDir, "data.json");
+  captureMetrics: CaptureMetrics,
+): BannerData {
   const finalLayers: LayersV1 = layerConfigs.map((item) => {
     if (item.tagName !== "img" && item.tagName !== "video") {
       throw new Error(
@@ -448,17 +477,11 @@ export function dumpLayerConfig(
     return sortObjectKeys(layer);
   });
 
-  fs.writeFileSync(
-    outputPath,
-    JSON.stringify(
-      {
-        version: 1,
-        type: "multi-layer",
-        layers: finalLayers,
-      },
-      null,
-      2,
-    ),
-  );
-  console.log("已写入 data.json 配置文件");
+  return {
+    version: 1,
+    type: "multi-layer",
+    captureBannerWidth: captureMetrics.captureBannerWidth,
+    captureBannerHeight: captureMetrics.captureBannerHeight,
+    layers: finalLayers,
+  };
 }

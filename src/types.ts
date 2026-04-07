@@ -84,6 +84,10 @@ export type BannerType =
 export interface BannerConfigV1 extends BannerRef {
   version: 1;
   type: BannerType;
+  /** 捕获数据时 banner 容器的宽度 */
+  captureBannerWidth?: number;
+  /** 捕获数据时 banner 容器的高度 */
+  captureBannerHeight?: number;
   layers: LayersV1;
 }
 

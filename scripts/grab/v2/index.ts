@@ -81,18 +81,18 @@ function parseLayersFromHtml(html: string): LayersV2[] {
     parsed = JSON.parse(jsonText) as SplitLayerPayload;
   } catch (error: unknown) {
     throw new Error(
-      `split_layer JSON 解析失败: ${error instanceof Error ? error.message : String(error)}`,
+      `JSON 解析失败: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 
   if (Number(parsed.version) !== 1) {
     throw new Error(
-      `split_layer 版本校验失败: 预期官方 version=1，实际为 ${String(parsed.version)}`,
+      `banner 版本校验失败: 预期官方 version=1，实际为 ${String(parsed.version)}`,
     );
   }
 
   if (!Array.isArray(parsed.layers) || parsed.layers.length === 0) {
-    throw new Error("split_layer 数据校验失败: layers 必须是非空数组");
+    throw new Error("banner 数据校验失败: layers 必须是非空数组");
   }
 
   return parsed.layers;
@@ -102,7 +102,7 @@ function extractSplitLayerLiteral(html: string): string {
   const splitLayerPattern = /(^|[^\w$"'`])["']?split_layer["']?\s*:\s*(['"])/m;
   const match = splitLayerPattern.exec(html);
   if (!match || match.index === undefined) {
-    throw new Error("未找到 split_layer");
+    throw new Error("未找到 banner 数据");
   }
 
   const quote = match[2];

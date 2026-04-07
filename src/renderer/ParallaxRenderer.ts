@@ -19,17 +19,22 @@ type MotionLayerExtra = MediaLayer & {
 export class ParallaxRenderer implements BaseRenderer {
   private static readonly DEG2RAD: number = 180 / Math.PI;
   private static readonly DEFAULT_ANIMATION_DURATION: number = 300;
-  private static readonly DEFAULT_SCREEN_WIDTH: number = 1650;
-
-  private bannerContainer: HTMLElement | null = null;
-  private layersExtra: MotionLayerExtra[] = [];
-  private layers: NodeListOf<HTMLElement> | null = null;
-  private viewCompensation: number = 1;
-  private hasParticle: boolean = false;
+  private static readonly DEFAULT_CAPTURE_BANNER_WIDTH: number = 1650;
+  private static readonly DEFAULT_CAPTURE_BANNER_HEIGHT: number = 160;
 
   private _particleSystem: ParticleSystem | null = null;
   private _particleCanvas: HTMLCanvasElement | null = null;
+  private bannerContainer: HTMLElement | null = null;
 
+  private layersExtra: MotionLayerExtra[] = [];
+  private layers: NodeListOf<HTMLElement> | null = null;
+  private widthCompensation: number = 1;
+  private heightCompensation: number = 1;
+  private captureBannerWidth: number =
+    ParallaxRenderer.DEFAULT_CAPTURE_BANNER_WIDTH;
+  private captureBannerHeight: number =
+    ParallaxRenderer.DEFAULT_CAPTURE_BANNER_HEIGHT;
+  private hasParticle: boolean = false;
   private state: ParallaxState = {
     initX: 0,
     moveX: 0,
@@ -58,6 +63,14 @@ export class ParallaxRenderer implements BaseRenderer {
 
     this.dispose();
     this.bannerContainer = container;
+    this.captureBannerWidth =
+      bannerConfig.captureBannerWidth && bannerConfig.captureBannerWidth > 0
+        ? bannerConfig.captureBannerWidth
+        : ParallaxRenderer.DEFAULT_CAPTURE_BANNER_WIDTH;
+    this.captureBannerHeight =
+      bannerConfig.captureBannerHeight && bannerConfig.captureBannerHeight > 0
+        ? bannerConfig.captureBannerHeight
+        : ParallaxRenderer.DEFAULT_CAPTURE_BANNER_HEIGHT;
 
     this.bannerContainer.addEventListener("mouseenter", this._boundMouseEnter);
     this.bannerContainer.addEventListener("mousemove", this._boundMouseMove);
@@ -65,7 +78,7 @@ export class ParallaxRenderer implements BaseRenderer {
     window.addEventListener("resize", this._boundResize);
     window.addEventListener("blur", this._boundBlur);
 
-    this._updateViewCompensation();
+    this._updateLayoutCompensation();
 
     const motionLayers = bannerConfig.layers.filter(
       (item): item is MediaLayer =>
@@ -105,19 +118,31 @@ export class ParallaxRenderer implements BaseRenderer {
     const containerWidth = this.bannerContainer?.clientWidth ?? 0;
     return containerWidth > 0
       ? containerWidth
-      : ParallaxRenderer.DEFAULT_SCREEN_WIDTH;
+      : ParallaxRenderer.DEFAULT_CAPTURE_BANNER_WIDTH;
+  }
+
+  private _getContainerHeight(): number {
+    const containerHeight = this.bannerContainer?.clientHeight ?? 0;
+    return containerHeight > 0 ? containerHeight : this.captureBannerHeight;
   }
 
   private _getMotionRatio(moveX: number): number {
     return Math.min(Math.abs((moveX / this._getContainerWidth()) * 2), 1);
   }
 
-  private _updateViewCompensation(): void {
+  private _getLayoutCompensation(): number {
+    return this.widthCompensation * this.heightCompensation;
+  }
+
+  private _updateLayoutCompensation(): void {
     const containerWidth = this._getContainerWidth();
-    this.viewCompensation =
-      containerWidth > ParallaxRenderer.DEFAULT_SCREEN_WIDTH
-        ? containerWidth / ParallaxRenderer.DEFAULT_SCREEN_WIDTH
+    this.widthCompensation =
+      containerWidth > this.captureBannerWidth
+        ? containerWidth / this.captureBannerWidth
         : 1;
+
+    const containerHeight = this._getContainerHeight();
+    this.heightCompensation = containerHeight / this.captureBannerHeight;
   }
 
   private _destroyVideos(): void {
@@ -155,6 +180,10 @@ export class ParallaxRenderer implements BaseRenderer {
 
     this.layersExtra = [];
     this.layers = null;
+    this.widthCompensation = 1;
+    this.heightCompensation = 1;
+    this.captureBannerWidth = ParallaxRenderer.DEFAULT_CAPTURE_BANNER_WIDTH;
+    this.captureBannerHeight = ParallaxRenderer.DEFAULT_CAPTURE_BANNER_HEIGHT;
   }
 
   private _createLayerElement(
@@ -176,6 +205,8 @@ export class ParallaxRenderer implements BaseRenderer {
   }
 
   private _initParallaxData(layers: MediaLayer[]): void {
+    const layoutCompensation = this._getLayoutCompensation();
+
     this.layersExtra = layers
       .filter((item) => {
         const op = item.opacity;
@@ -183,8 +214,8 @@ export class ParallaxRenderer implements BaseRenderer {
       })
       .map((item) => {
         const baseTransform = [...item.transform];
-        baseTransform[4] *= this.viewCompensation;
-        baseTransform[5] *= this.viewCompensation;
+        baseTransform[4] *= layoutCompensation;
+        baseTransform[5] *= layoutCompensation;
 
         const _baseTransform = `matrix(${baseTransform[0]}, ${baseTransform[1]}, ${baseTransform[2]}, ${baseTransform[3]}, ${baseTransform[4]}, ${baseTransform[5]})`;
 
@@ -196,22 +227,26 @@ export class ParallaxRenderer implements BaseRenderer {
           ...item,
           opacity,
           _baseTransform,
-          _xSpeedCompensated: item.xSpeed,
-          _ySpeedCompensated: item.ySpeed || 0,
+          _xSpeedCompensated:
+            item.xSpeed !== undefined
+              ? item.xSpeed * this.heightCompensation
+              : undefined,
+          _ySpeedCompensated: (item.ySpeed || 0) * this.heightCompensation,
         };
       });
   }
 
   private _renderParallax(): void {
     if (!this.bannerContainer) return;
+    const layoutCompensation = this._getLayoutCompensation();
 
     if (this.layers && this.layers.length > 0) {
       for (let i = 0; i < this.layers.length; i++) {
         const item = this.layersExtra[i];
         const child = this.layers[i].firstElementChild as HTMLElement;
         if (child) {
-          child.style.width = `${item.width * this.viewCompensation}px`;
-          child.style.height = `${item.height * this.viewCompensation}px`;
+          child.style.width = `${item.width * layoutCompensation}px`;
+          child.style.height = `${item.height * layoutCompensation}px`;
         }
         if (item._baseTransform) {
           this.layers[i].style.transform = item._baseTransform;
@@ -235,8 +270,8 @@ export class ParallaxRenderer implements BaseRenderer {
         const initialBlur = Array.isArray(item.blur) ? item.blur[0] : item.blur;
         child.style.filter = `blur(${initialBlur}px)`;
       }
-      child.style.width = `${item.width * this.viewCompensation}px`;
-      child.style.height = `${item.height * this.viewCompensation}px`;
+      child.style.width = `${item.width * layoutCompensation}px`;
+      child.style.height = `${item.height * layoutCompensation}px`;
 
       layer.appendChild(child);
       fragment.appendChild(layer);
@@ -354,7 +389,7 @@ export class ParallaxRenderer implements BaseRenderer {
   }
 
   private _handleResize(): void {
-    this._updateViewCompensation();
+    this._updateLayoutCompensation();
     this._initParallaxData(this.layersExtra);
     this._renderParallax();
     if (this.bannerContainer && this._particleCanvas) {
