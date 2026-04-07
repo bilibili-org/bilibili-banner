@@ -78,17 +78,15 @@ export default class BannerEngine {
     if (this.currentState === "success" && banner) {
       this._updateViewState("success");
 
-      if (banner.version === 2) {
-        return new OfficialRenderer();
-      }
-
       switch (banner.type) {
         case "single-image":
           return new SingleImageRenderer();
         case "single-video":
           return new SingleVideoRenderer();
         case "multi-layer":
-          return new ParallaxRenderer();
+          return banner.multiLayer.version === 2
+            ? new OfficialRenderer()
+            : new ParallaxRenderer();
         default:
           return new FailedRenderer();
       }

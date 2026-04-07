@@ -1,9 +1,9 @@
 import type {
   BannerConfig,
   LayersV2,
-  V2ScalarProperty,
-  V2TranslateProperty,
-  V2WrappableProperty,
+  ScalarProperty,
+  TranslateProperty,
+  WrappableProperty,
 } from "../types";
 import type { BaseRenderer } from "./BaseRenderer";
 import { releaseVideoElement } from "./helper";
@@ -145,13 +145,13 @@ type CurveResolver = typeof IDENTITY_CURVE;
 // ─────────────────── 辅助函数 ───────────────────
 
 function resolveScalarCurve(
-  prop: V2ScalarProperty | undefined,
+  prop: ScalarProperty | undefined,
 ): (x: number) => number {
   return prop?.offsetCurve ? makeCurve(prop.offsetCurve) : IDENTITY_CURVE;
 }
 
 function resolveTranslateCurve(
-  prop: V2TranslateProperty | undefined,
+  prop: TranslateProperty | undefined,
 ): (x: number) => number {
   return prop?.offsetCurve ? makeCurve(prop.offsetCurve) : IDENTITY_CURVE;
 }
@@ -167,7 +167,7 @@ function resolveBlurValue(
   offset: number,
   curve: (x: number) => number,
   normalizedDisplacementX: number,
-  prop: V2WrappableProperty,
+  prop: WrappableProperty,
 ): number {
   const value = initial + offset * curve(normalizedDisplacementX);
   if (!prop.wrap || prop.wrap === "clamp") {
@@ -182,7 +182,7 @@ function resolveOpacityValue(
   offset: number,
   curve: (x: number) => number,
   normalizedDisplacementX: number,
-  prop: V2WrappableProperty,
+  prop: WrappableProperty,
 ): number {
   const value = initial + offset * curve(normalizedDisplacementX);
   if (!prop.wrap || prop.wrap === "clamp") {
@@ -259,10 +259,16 @@ export class OfficialRenderer implements BaseRenderer {
   }
 
   public render(container: HTMLElement, bannerConfig?: BannerConfig): void {
-    if (!bannerConfig || bannerConfig.version !== 2) return;
+    if (
+      !bannerConfig ||
+      bannerConfig.type !== "multi-layer" ||
+      bannerConfig.multiLayer.version !== 2
+    ) {
+      return;
+    }
 
     this.container = container;
-    this.layers = bannerConfig.layers;
+    this.layers = bannerConfig.multiLayer.layers;
     this.bannerHeightScale = container.clientHeight / 155;
 
     this._buildSnapshots();

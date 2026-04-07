@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { Page } from "puppeteer";
-import type { LayersV1, MediaLayer } from "../../../src/types";
+import type { LayersV1, MediaLayerV1 } from "../../../src/types";
 import type { AssetDownloadCtx, DownloadSummary } from "../types";
 import { cleanUrl } from "../workflow";
 import {
@@ -459,7 +459,7 @@ export function buildBannerData(
       );
     }
 
-    const layer: MediaLayer = {
+    const layer: MediaLayerV1 = {
       type: item.tagName,
       src: item.src,
       width: item.width,

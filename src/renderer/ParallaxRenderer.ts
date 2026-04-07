@@ -1,4 +1,4 @@
-import type { BannerConfigV1, MediaLayer, ParticleLayer } from "../types";
+import type { BannerConfig, MediaLayerV1, ParticleLayer } from "../types";
 import type { BaseRenderer } from "./BaseRenderer";
 import { releaseVideoElement } from "./helper";
 import ParticleSystem from "./ParticleSystem";
@@ -10,7 +10,7 @@ interface ParallaxState {
   rafId: number;
 }
 
-type MotionLayerExtra = MediaLayer & {
+type MotionLayerExtra = MediaLayerV1 & {
   _baseTransform?: string;
   _xSpeedCompensated?: number;
   _ySpeedCompensated?: number;
@@ -58,18 +58,26 @@ export class ParallaxRenderer implements BaseRenderer {
     this._resetPosition = this._resetPositionInternal.bind(this);
   }
 
-  public render(container: HTMLElement, bannerConfig?: BannerConfigV1): void {
-    if (!bannerConfig) return;
+  public render(container: HTMLElement, bannerConfig?: BannerConfig): void {
+    if (
+      !bannerConfig ||
+      bannerConfig.type !== "multi-layer" ||
+      bannerConfig.multiLayer.version !== 1
+    ) {
+      return;
+    }
+
+    const multiLayer = bannerConfig.multiLayer;
 
     this.dispose();
     this.bannerContainer = container;
     this.captureBannerWidth =
-      bannerConfig.captureBannerWidth && bannerConfig.captureBannerWidth > 0
-        ? bannerConfig.captureBannerWidth
+      multiLayer.captureBannerWidth && multiLayer.captureBannerWidth > 0
+        ? multiLayer.captureBannerWidth
         : ParallaxRenderer.DEFAULT_CAPTURE_BANNER_WIDTH;
     this.captureBannerHeight =
-      bannerConfig.captureBannerHeight && bannerConfig.captureBannerHeight > 0
-        ? bannerConfig.captureBannerHeight
+      multiLayer.captureBannerHeight && multiLayer.captureBannerHeight > 0
+        ? multiLayer.captureBannerHeight
         : ParallaxRenderer.DEFAULT_CAPTURE_BANNER_HEIGHT;
 
     this.bannerContainer.addEventListener("mouseenter", this._boundMouseEnter);
@@ -80,12 +88,12 @@ export class ParallaxRenderer implements BaseRenderer {
 
     this._updateLayoutCompensation();
 
-    const motionLayers = bannerConfig.layers.filter(
-      (item): item is MediaLayer =>
+    const motionLayers = multiLayer.layers.filter(
+      (item): item is MediaLayerV1 =>
         item.type === "img" || item.type === "video",
     );
     const particleConfig =
-      bannerConfig.layers.find(
+      multiLayer.layers.find(
         (item): item is ParticleLayer => item.type === "particle",
       ) || null;
 
@@ -187,7 +195,7 @@ export class ParallaxRenderer implements BaseRenderer {
   }
 
   private _createLayerElement(
-    item: MediaLayer,
+    item: MediaLayerV1,
   ): HTMLImageElement | HTMLVideoElement {
     if (item.type === "video") {
       const child = document.createElement("video");
@@ -204,7 +212,7 @@ export class ParallaxRenderer implements BaseRenderer {
     }
   }
 
-  private _initParallaxData(layers: MediaLayer[]): void {
+  private _initParallaxData(layers: MediaLayerV1[]): void {
     const layoutCompensation = this._getLayoutCompensation();
 
     this.layersExtra = layers

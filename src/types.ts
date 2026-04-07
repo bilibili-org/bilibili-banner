@@ -1,6 +1,6 @@
-// V1 Banner 类型 ===============================================
+// V1 Layers ===============================================
 
-interface BaseLayer {
+interface BaseLayerV1 {
   src: string;
   width: number;
   height: number;
@@ -13,11 +13,11 @@ interface BaseLayer {
   rotateSpeed?: number;
 }
 
-interface ImageLayer extends BaseLayer {
+interface ImageLayerV1 extends BaseLayerV1 {
   type: "img";
 }
 
-interface VideoLayer extends BaseLayer {
+interface VideoLayerV1 extends BaseLayerV1 {
   type: "video";
 }
 
@@ -31,59 +31,12 @@ export interface ParticleLayer {
   opacityRange: [number, number];
 }
 
-export type MediaLayer = ImageLayer | VideoLayer;
+export type MediaLayerV1 = ImageLayerV1 | VideoLayerV1;
 
-export type LayersV1 = Array<MediaLayer | ParticleLayer>;
+export type LayersV1 = Array<MediaLayerV1 | ParticleLayer>;
 
-// V2 Banner 类型 ===============================================
-
-export interface V2Source {
-  src: string;
-  id?: number;
-}
-
-/** 贝塞尔曲线控制点*/
-interface V2BaseProperty {
-  offsetCurve?: [number, number, number, number];
-}
-
-/** 标量属性（scale / rotate）*/
-export interface V2ScalarProperty extends V2BaseProperty {
-  initial?: number;
-  offset?: number;
-}
-
-/** 可折返的标量属性（blur / opacity）*/
-export interface V2WrappableProperty extends V2ScalarProperty {
-  wrap?: "clamp" | "alternate";
-}
-
-/** translate 属性*/
-export interface V2TranslateProperty extends V2BaseProperty {
-  initial?: [number, number];
-  offset?: [number, number];
-}
-
-export interface LayersV2 {
-  resources: V2Source[];
-  scale?: V2ScalarProperty;
-  rotate?: V2ScalarProperty;
-  translate?: V2TranslateProperty;
-  blur?: V2WrappableProperty;
-  opacity?: V2WrappableProperty;
-  id?: number;
-  name?: string;
-}
-
-export type BannerType =
-  | "single-image"
-  | "single-video"
-  | "multi-layer"
-  | "unknown";
-
-export interface BannerConfigV1 extends BannerRef {
+export interface MultiLayerV1 {
   version: 1;
-  type: BannerType;
   /** 捕获数据时 banner 容器的宽度 */
   captureBannerWidth?: number;
   /** 捕获数据时 banner 容器的高度 */
@@ -91,12 +44,80 @@ export interface BannerConfigV1 extends BannerRef {
   layers: LayersV1;
 }
 
-export interface BannerConfigV2 extends BannerRef {
+// V2 Layers ===============================================
+
+export interface Resource {
+  src: string;
+  id?: number;
+}
+
+/** 贝塞尔曲线控制点*/
+interface BaseProperty {
+  offsetCurve?: [number, number, number, number];
+}
+
+/** 标量属性（scale / rotate）*/
+export interface ScalarProperty extends BaseProperty {
+  initial?: number;
+  offset?: number;
+}
+
+/** 可折返的标量属性（blur / opacity）*/
+export interface WrappableProperty extends ScalarProperty {
+  wrap?: "clamp" | "alternate";
+}
+
+/** translate 属性*/
+export interface TranslateProperty extends BaseProperty {
+  initial?: [number, number];
+  offset?: [number, number];
+}
+
+export interface LayersV2 {
+  resources: Resource[];
+  scale?: ScalarProperty;
+  rotate?: ScalarProperty;
+  translate?: TranslateProperty;
+  blur?: WrappableProperty;
+  opacity?: WrappableProperty;
+  id?: number;
+  name?: string;
+}
+
+export interface MultiLayerV2 {
   version: 2;
   layers: LayersV2[];
 }
 
-export type BannerConfig = BannerConfigV1 | BannerConfigV2;
+// Single Layer ===============================================
+
+interface SingleLayer {
+  src: string;
+}
+
+// Banner Config ===============================================
+
+export type BannerType = "single-image" | "single-video" | "multi-layer";
+
+export interface MultiLayerBannerConfigV1 extends BannerRef {
+  type: "multi-layer";
+  multiLayer: MultiLayerV1;
+}
+
+export interface MultiLayerBannerConfigV2 extends BannerRef {
+  type: "multi-layer";
+  multiLayer: MultiLayerV2;
+}
+
+export interface SingleBannerConfig extends BannerRef {
+  type: "single-image" | "single-video";
+  layer: SingleLayer;
+}
+
+export type BannerConfig =
+  | MultiLayerBannerConfigV1
+  | MultiLayerBannerConfigV2
+  | SingleBannerConfig;
 
 // loader ===============================================
 

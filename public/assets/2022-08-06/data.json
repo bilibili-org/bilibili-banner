@@ -1,10 +1,6 @@
 {
   "type": "single-image",
-  "version": 1,
-  "layers": [
-    {
-      "type": "img",
-      "src": "assets/2022-08-06/956de2627e2cc1a9da53ea1d8762cea33e8ea6e5.png"
-    }
-  ]
+  "layer": {
+    "src": "assets/2022-08-06/956de2627e2cc1a9da53ea1d8762cea33e8ea6e5.png"
+  }
 }

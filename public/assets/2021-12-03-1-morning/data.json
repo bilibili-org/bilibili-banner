@@ -1,10 +1,6 @@
 {
   "type": "single-video",
-  "version": 1,
-  "layers": [
-    {
-      "type": "video",
-      "src": "assets/2021-12-03-1-morning/2021-winter.webm"
-    }
-  ]
+  "layer": {
+    "src": "assets/2021-12-03-1-morning/2021-winter.webm"
+  }
 }
