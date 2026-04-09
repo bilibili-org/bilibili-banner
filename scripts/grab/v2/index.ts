@@ -302,8 +302,11 @@ function dumpLayerConfig(layers: LayersV2[], dataDir: string): void {
     outputPath,
     JSON.stringify(
       {
-        version: 2,
-        layers,
+        type: "multi-layer",
+        multiLayer: {
+          version: 2,
+          layers,
+        },
       },
       null,
       2,

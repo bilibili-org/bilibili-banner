@@ -41,11 +41,13 @@ interface CaptureMetrics {
 }
 
 interface BannerData {
-  version: 1;
   type: "multi-layer";
-  captureBannerWidth: number;
-  captureBannerHeight: number;
-  layers: LayersV1;
+  multiLayer: {
+    version: 1;
+    captureBannerWidth: number;
+    captureBannerHeight: number;
+    layers: LayersV1;
+  };
 }
 
 export async function parseLayers(page: Page): Promise<LayerConfig[]> {
@@ -478,10 +480,12 @@ export function buildBannerData(
   });
 
   return {
-    version: 1,
     type: "multi-layer",
-    captureBannerWidth: captureMetrics.captureBannerWidth,
-    captureBannerHeight: captureMetrics.captureBannerHeight,
-    layers: finalLayers,
+    multiLayer: {
+      version: 1,
+      captureBannerWidth: captureMetrics.captureBannerWidth,
+      captureBannerHeight: captureMetrics.captureBannerHeight,
+      layers: finalLayers,
+    },
   };
 }
