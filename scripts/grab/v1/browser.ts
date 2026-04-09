@@ -1,8 +1,15 @@
+import fs from "node:fs";
+import path, { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import puppeteer, { type Browser, type Page } from "puppeteer";
 
 export const DEFAULT_SCREEN_WIDTH = 1650;
 export const DEFAULT_SCREEN_HEIGHT = 800;
 export const DEFAULT_MOUSE_MOVE_DISTANCE = 1000;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const PROJECT_ENV_FILE = path.resolve(__dirname, "../../../.env");
 
 export interface BrowserSession {
   browser: Browser;
@@ -13,14 +20,29 @@ export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function initBrowser(): Promise<BrowserSession> {
-  const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
-  if (!executablePath) {
-    throw new Error(
-      "未找到浏览器路径。请在 .env 文件中配置 PUPPETEER_EXECUTABLE_PATH，或在运行命令时通过环境变量指定\n" +
-        "示例内容: PUPPETEER_EXECUTABLE_PATH=C:\\Programs\\chrome.exe",
-    );
+function resolveExecutablePath(): string {
+  const inlinePath = process.env.PUPPETEER_EXECUTABLE_PATH?.trim();
+  if (inlinePath) {
+    return inlinePath;
   }
+
+  if (fs.existsSync(PROJECT_ENV_FILE)) {
+    process.loadEnvFile(PROJECT_ENV_FILE);
+  }
+
+  const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH?.trim();
+  if (executablePath) {
+    return executablePath;
+  }
+
+  throw new Error(
+    "未找到浏览器路径。请设置 PUPPETEER_EXECUTABLE_PATH，或在项目根目录 .env 中配置该变量\n" +
+      "示例内容: PUPPETEER_EXECUTABLE_PATH=/path/to/chrome.exe",
+  );
+}
+
+export async function initBrowser(): Promise<BrowserSession> {
+  const executablePath = resolveExecutablePath();
 
   const browser = await puppeteer.launch({
     headless: true,
