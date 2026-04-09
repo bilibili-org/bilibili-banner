@@ -31,7 +31,7 @@ pnpm build && pnpm preview
 
 项目提供了 `grab` 自动化脚本，用于抓取 Banner 所需的图层资源和配置参数，数据通常保存在以日期命名的 `public/assets/{YYYY-MM-DD}` 目录下
 
-使用方式：
+使用示例：
 
 ```bash
 pnpm grab -m v2 -u https://web.archive.org/web/20241226082416/https://www.bilibili.com/
@@ -45,12 +45,12 @@ pnpm grab -m v2 -u https://web.archive.org/web/20241226082416/https://www.bilibi
 - `-u`：**可选参数**。指定 Wayback Machine 完整快照 URL；未提供时默认抓取当前日期的官网数据
 
 > [!TIP]
-> 抓取脚本应优先使用 `v2` 模式，根据目前仓库抓取的数据，B站在 2023 年之后就已经开始使用 HTML 内嵌 Banner 数据的方式来下发配置，且此模式解析速度快，使用 v2 配置文件的渲染逻辑也几乎和官方一致，能最大程度还原 Banner 的交互效果
+> 抓取脚本应优先使用 `v2` 模式，根据仓库目前已有的数据表明，B站在 2023 年之后就已经开始通过 HTML 内嵌 Banner 数据的方式来下发配置，且 v2 的渲染逻辑也几乎和官方一致，能最大程度还原 Banner 的交互效果
 >
 > 如果需要了解抓取链路、参数微调方式，或 `v1 / v2` 的实现差异，请阅读 [scripts/README.md](scripts/README.md)。
 
 > [!NOTE]
-> `v1` 模式依赖 Puppeteer，需要手动设置 chromium 系浏览器的可执行程序路径。在运行时会优先读取当前环境中的 `PUPPETEER_EXECUTABLE_PATH`；若未提供，则会尝试加载项目根目录 `.env` 中的同名变量
+> `v1` 模式依赖 Puppeteer，需要手动指定 Chromium 系浏览器的可执行程序路径。脚本在运行时会优先读取当前环境中的 `PUPPETEER_EXECUTABLE_PATH` 变量；若未提供，则会尝试加载项目根目录 `.env` 中的同名变量
 >
 > ```env
 > PUPPETEER_EXECUTABLE_PATH=X:\path\to\chrome.exe
