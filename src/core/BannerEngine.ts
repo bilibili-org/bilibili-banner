@@ -3,6 +3,7 @@ import {
   type BaseRenderer,
   FailedRenderer,
   LoadingRenderer,
+  LogoRenderer,
   OfficialRenderer,
   ParallaxRenderer,
   SingleImageRenderer,
@@ -15,8 +16,10 @@ type BannerViewState = "idle" | "loading" | "success" | "failed";
 export default class BannerEngine {
   private bannerContainer: HTMLElement | null;
   private animatedBanner: HTMLElement | null;
+  private logoContainer: HTMLElement | null;
   private readonly loader: BannerLoader = new BannerLoader();
   private renderer: BaseRenderer | null = null;
+  private readonly logoRenderer: LogoRenderer = new LogoRenderer();
 
   private failedBanners: Set<string> = new Set();
   private currentPath = "";
@@ -28,6 +31,7 @@ export default class BannerEngine {
     this.bannerContainer = document.getElementById("banner-container");
     this.animatedBanner =
       this.bannerContainer?.querySelector(".animated-banner") || null;
+    this.logoContainer = document.getElementById("inner-logo");
   }
 
   private _updateViewState(state: Exclude<BannerViewState, "idle">): void {
@@ -48,6 +52,9 @@ export default class BannerEngine {
       this.renderer = null;
     }
 
+    this.logoRenderer.dispose();
+    this.bannerContainer?.classList.remove("has-logo");
+
     if (!this.animatedBanner) return;
 
     if (this.currentState === "idle") {
@@ -61,6 +68,15 @@ export default class BannerEngine {
         this.animatedBanner,
         this.currentBanner ?? undefined,
       );
+    }
+
+    if (
+      this.currentState === "success" &&
+      this.currentBanner?.logo?.src &&
+      this.logoContainer
+    ) {
+      this.logoRenderer.render(this.logoContainer, this.currentBanner.logo.src);
+      this.bannerContainer?.classList.add("has-logo");
     }
   }
 

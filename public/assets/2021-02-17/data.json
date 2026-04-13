@@ -1,5 +1,8 @@
 {
   "type": "multi-layer",
+  "logo": {
+    "src": "assets/2021-02-17/fb9521333b8ea79d90bdfc6da31cf83c52d93ec9.png"
+  },
   "multiLayer": {
     "version": 1,
     "captureBannerWidth": 1650,

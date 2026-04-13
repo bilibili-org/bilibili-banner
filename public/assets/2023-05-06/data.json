@@ -1,5 +1,8 @@
 {
   "type": "multi-layer",
+  "logo": {
+    "src": "assets/2023-05-06/38a9518784220f7f3c894bc9ba1ee799b2f1644b.png"
+  },
   "multiLayer": {
     "version": 2,
     "layers": [

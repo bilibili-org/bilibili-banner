@@ -99,17 +99,23 @@ interface SingleLayer {
 
 export type BannerType = "single-image" | "single-video" | "multi-layer";
 
-export interface MultiLayerBannerConfigV1 extends BannerRef {
+export interface LogoConfig {
+  logo?: {
+    src: string;
+  };
+}
+
+export interface MultiLayerBannerConfigV1 extends BannerRef, LogoConfig {
   type: "multi-layer";
   multiLayer: MultiLayerV1;
 }
 
-export interface MultiLayerBannerConfigV2 extends BannerRef {
+export interface MultiLayerBannerConfigV2 extends BannerRef, LogoConfig {
   type: "multi-layer";
   multiLayer: MultiLayerV2;
 }
 
-export interface SingleBannerConfig extends BannerRef {
+export interface SingleBannerConfig extends BannerRef, LogoConfig {
   type: "single-image" | "single-video";
   layer: SingleLayer;
 }

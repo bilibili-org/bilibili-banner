@@ -379,7 +379,51 @@ video {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 999;
+}
+
+#inner-logo {
+  z-index: 1;
+  display: none;
+  position: absolute;
+  left: 56px; /* 同官方 <1367px 断点的 padding 值 */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 180px;
+  min-height: 60px;
+  height: 50%;
+  pointer-events: none;
+}
+
+@media (min-width: 1367px) and (max-width: 1700.9px) {
+  #inner-logo {
+    left: 64px;
+  }
+}
+
+@media (min-width: 1701px) and (max-width: 2199.9px) {
+  #inner-logo {
+    left: 96px;
+  }
+}
+
+@media (min-width: 2200px) {
+  #inner-logo {
+    left: 0;
+  }
+}
+
+#banner-container.is-success.has-logo #inner-logo {
+  display: inline-block;
+}
+
+.logo-img {
+  display: block;
+  object-fit: contain;
+  max-width: 100%;
+  max-height: 100%;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 /* 页脚容器 */
