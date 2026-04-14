@@ -31,3 +31,4 @@ temp/
 .stylelintcache
 .parcel-cache
 .turbo/
+.worktrees/
