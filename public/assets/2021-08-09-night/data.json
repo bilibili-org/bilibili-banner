@@ -1,5 +1,8 @@
 {
   "type": "single-video",
+  "logo": {
+    "src": "assets/2021-08-09-evening/9e5f278027ae7f1e1933b6e4002870361da6c20b.png"
+  },
   "layer": {
     "src": "assets/2021-08-09-night/253475a9-3e92-4fc2-94b0-9d8cc7d956cf.mp4"
   }
